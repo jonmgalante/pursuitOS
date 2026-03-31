@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Rep Copilot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 0;
+        padding: 16px;
+        background: #fafafa;
+        color: #111827;
+      }
+      .card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 14px;
+      }
+      h1, h2 {
+        margin-top: 0;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+      }
+      button {
+        border: 1px solid #111827;
+        background: #111827;
+        color: white;
+        padding: 10px 12px;
+        border-radius: 999px;
+        cursor: pointer;
+        margin-right: 8px;
+        margin-bottom: 8px;
+      }
+      button.secondary {
+        background: white;
+        color: #111827;
+      }
+      .muted {
+        color: #6b7280;
+        font-size: 13px;
+      }
+      code {
+        background: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 8px;
+      }
+      .status {
+        white-space: pre-wrap;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Rep Copilot</h1>
+      <p class="muted">Capture visible Grip records from the active tab into the workspace.</p>
+    </div>
+
+    <div class="card">
+      <h2>Workspace settings</h2>
+      <label for="webAppUrl">Web app URL</label>
+      <input id="webAppUrl" type="text" value="http://localhost:3000" />
+
+      <label for="workspaceId">Workspace ID</label>
+      <input id="workspaceId" type="text" value="ws_demo_summit_2026" />
+
+      <button id="saveSettings" class="secondary">Save settings</button>
+      <button id="openWorkspace" class="secondary">Open workspace</button>
+    </div>
+
+    <div class="card">
+      <h2>Capture</h2>
+      <p class="muted">
+        Open a visible attendee or session page and press capture. The extension injects the
+        content script only into the active tab.
+      </p>
+      <button id="capture">Capture current page</button>
+      <div id="status" class="status muted">Ready.</div>
+    </div>
+
+    <script type="module" src="./sidepanel.js"></script>
+  </body>
+</html>

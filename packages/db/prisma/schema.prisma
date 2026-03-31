@@ -1,0 +1,547 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PortalProvider {
+  GRIP
+}
+
+enum WorkspaceMode {
+  PRE_EVENT
+  IN_EVENT
+  POST_EVENT
+}
+
+enum CaptureMethod {
+  DOM
+  SCREENSHOT
+}
+
+enum CapturePageType {
+  ATTENDEE_LIST
+  ATTENDEE_PROFILE
+  SPEAKER_LIST
+  SPEAKER_PROFILE
+  SESSION_LIST
+  SESSION_PROFILE
+  UNKNOWN
+}
+
+enum SourceEntityType {
+  PERSON
+  COMPANY
+  SESSION
+}
+
+enum SourceRelationRole {
+  LIST_ITEM
+  PROFILE_PAGE
+  SPEAKER_CARD
+  SESSION_CARD
+}
+
+enum TargetPriority {
+  MUST_MEET
+  NICE_TO_MEET
+  BACKUP
+}
+
+enum TargetStatus {
+  TARGETED
+  MET
+  MISSED
+}
+
+enum EncounterChannel {
+  MANUAL
+  VOICE
+}
+
+enum DraftChannel {
+  EMAIL
+}
+
+enum DraftStatus {
+  GENERATED
+  REVIEWED
+  SYNCED
+  FAILED
+}
+
+enum SyncProvider {
+  HUBSPOT
+  GMAIL
+}
+
+enum SyncStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+enum MatchMethod {
+  NONE
+  DETERMINISTIC_EMAIL
+  DETERMINISTIC_DOMAIN
+  DETERMINISTIC_COMPANY
+  FUZZY_COMPANY
+  AI_DISAMBIGUATION
+  MANUAL
+}
+
+enum ReviewState {
+  NOT_NEEDED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum ArtifactKind {
+  PAGE_HTML
+  SCREENSHOT
+  AUDIO
+  TRANSCRIPT
+  JSON_EXPORT
+}
+
+enum JobType {
+  EXTRACTION
+  TRANSCRIPTION
+  MATCHING
+  DRAFT_GENERATION
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model Event {
+  id             String         @id @default(cuid())
+  name           String
+  venue          String?
+  city           String?
+  startsAt       DateTime
+  endsAt         DateTime
+  timezone       String
+  portalProvider PortalProvider @default(GRIP)
+  portalEventKey String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  workspaces Workspace[]
+}
+
+model Workspace {
+  id             String         @id @default(cuid())
+  eventId        String
+  name           String
+  ownerUserKey   String?
+  portalProvider PortalProvider @default(GRIP)
+  mode           WorkspaceMode  @default(PRE_EVENT)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  event             Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  companies         Company[]
+  persons           Person[]
+  sessions          Session[]
+  artifacts         Artifact[]
+  captureBatches    CaptureBatch[]
+  sourceRecords     SourceRecord[]
+  targets           Target[]
+  encounters        Encounter[]
+  sessionNotes      SessionNote[]
+  followUpDrafts    FollowUpDraft[]
+  tasks             Task[]
+  crmMatches        CrmMatch[]
+  connectorAccounts ConnectorAccount[]
+  auditLogs         AuditLog[]
+  jobs              AppJob[]
+
+  @@index([eventId])
+}
+
+model Company {
+  id              String   @id @default(cuid())
+  workspaceId     String
+  name            String
+  normalizedName  String
+  websiteDomain   String?
+  linkedinUrl     String?
+  hubspotCompanyId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace    Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  persons      Person[]
+  sourceLinks  CompanySourceRecord[]
+
+  @@index([workspaceId, normalizedName])
+  @@index([workspaceId, websiteDomain])
+}
+
+model Person {
+  id               String       @id @default(cuid())
+  workspaceId      String
+  companyId        String?
+  fullName         String
+  firstName        String?
+  lastName         String?
+  title            String?
+  primaryEmail     String?
+  linkedinUrl      String?
+  isAttendee       Boolean      @default(true)
+  isSpeaker        Boolean      @default(false)
+  hubspotContactId String?
+  matchMethod      MatchMethod  @default(NONE)
+  reviewState      ReviewState  @default(NOT_NEEDED)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  workspace      Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  company        Company?            @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  sourceLinks    PersonSourceRecord[]
+  sessionRoles   SessionSpeaker[]
+  targets        Target[]
+  encounters     Encounter[]
+  sessionNotes   SessionNote[]
+  followUpDrafts FollowUpDraft[]
+  tasks          Task[]
+  crmMatches     CrmMatch[]
+
+  @@index([workspaceId, fullName])
+  @@index([workspaceId, primaryEmail])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  workspaceId String
+  title      String
+  abstract   String?
+  track      String?
+  room       String?
+  startAt    DateTime?
+  endAt      DateTime?
+  rankScore  Float?
+  rankWhy    Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  workspace    Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  speakers     SessionSpeaker[]
+  sourceLinks  SessionSourceRecord[]
+  sessionNotes SessionNote[]
+
+  @@index([workspaceId, startAt])
+  @@index([workspaceId, title])
+}
+
+model SessionSpeaker {
+  id         String   @id @default(cuid())
+  sessionId  String
+  personId   String
+  speakerRole String?
+  createdAt  DateTime @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  person  Person  @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, personId])
+}
+
+model Artifact {
+  id         String       @id @default(cuid())
+  workspaceId String
+  kind       ArtifactKind
+  storageKey String
+  mimeType   String
+  byteSize   Int
+  checksum   String?
+  createdAt  DateTime     @default(now())
+
+  workspace               Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  captureBatchPage        CaptureBatch[]  @relation("CaptureBatchPageArtifact")
+  captureBatchScreenshot  CaptureBatch[]  @relation("CaptureBatchScreenshotArtifact")
+  encounterAudio          Encounter[]     @relation("EncounterAudioArtifact")
+  encounterTranscript     Encounter[]     @relation("EncounterTranscriptArtifact")
+  sessionNoteTranscript   SessionNote[]   @relation("SessionNoteTranscriptArtifact")
+
+  @@index([workspaceId, kind])
+}
+
+model CaptureBatch {
+  id                  String          @id @default(cuid())
+  workspaceId         String
+  portalProvider      PortalProvider  @default(GRIP)
+  pageType            CapturePageType @default(UNKNOWN)
+  pageUrl             String
+  pageTitle           String?
+  captureMethod       CaptureMethod   @default(DOM)
+  pageArtifactId      String?
+  screenshotArtifactId String?
+  extractorVersion    String?
+  recordCount         Int             @default(0)
+  capturedByUserKey   String?
+  capturedAt          DateTime        @default(now())
+
+  workspace          Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  pageArtifact       Artifact? @relation("CaptureBatchPageArtifact", fields: [pageArtifactId], references: [id], onDelete: SetNull)
+  screenshotArtifact Artifact? @relation("CaptureBatchScreenshotArtifact", fields: [screenshotArtifactId], references: [id], onDelete: SetNull)
+  sourceRecords      SourceRecord[]
+
+  @@index([workspaceId, capturedAt])
+}
+
+model SourceRecord {
+  id            String           @id @default(cuid())
+  workspaceId   String
+  captureBatchId String
+  entityType    SourceEntityType
+  externalKey   String?
+  rawFields     Json
+  rawHtmlSnippet String?
+  pageUrl       String
+  provenance    Json
+  createdAt     DateTime         @default(now())
+
+  workspace    Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  captureBatch CaptureBatch         @relation(fields: [captureBatchId], references: [id], onDelete: Cascade)
+  personLinks  PersonSourceRecord[]
+  companyLinks CompanySourceRecord[]
+  sessionLinks SessionSourceRecord[]
+
+  @@index([workspaceId, entityType])
+  @@index([captureBatchId])
+}
+
+model PersonSourceRecord {
+  id           String             @id @default(cuid())
+  personId     String
+  sourceRecordId String
+  relationRole SourceRelationRole @default(LIST_ITEM)
+  createdAt    DateTime           @default(now())
+
+  person       Person       @relation(fields: [personId], references: [id], onDelete: Cascade)
+  sourceRecord SourceRecord @relation(fields: [sourceRecordId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, sourceRecordId])
+  @@index([sourceRecordId])
+}
+
+model CompanySourceRecord {
+  id           String             @id @default(cuid())
+  companyId    String
+  sourceRecordId String
+  relationRole SourceRelationRole @default(LIST_ITEM)
+  createdAt    DateTime           @default(now())
+
+  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sourceRecord SourceRecord @relation(fields: [sourceRecordId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, sourceRecordId])
+  @@index([sourceRecordId])
+}
+
+model SessionSourceRecord {
+  id           String             @id @default(cuid())
+  sessionId    String
+  sourceRecordId String
+  relationRole SourceRelationRole @default(SESSION_CARD)
+  createdAt    DateTime           @default(now())
+
+  session      Session      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sourceRecord SourceRecord @relation(fields: [sourceRecordId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, sourceRecordId])
+  @@index([sourceRecordId])
+}
+
+model Target {
+  id         String         @id @default(cuid())
+  workspaceId String
+  personId   String
+  priority   TargetPriority
+  status     TargetStatus   @default(TARGETED)
+  why        String[]
+  targetedAt DateTime       @default(now())
+  metAt      DateTime?
+  missedAt   DateTime?
+  updatedAt  DateTime       @updatedAt
+
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  person         Person          @relation(fields: [personId], references: [id], onDelete: Cascade)
+  encounters     Encounter[]
+  followUpDrafts FollowUpDraft[]
+  tasks          Task[]
+
+  @@unique([workspaceId, personId])
+  @@index([workspaceId, priority, status])
+}
+
+model Encounter {
+  id                 String           @id @default(cuid())
+  workspaceId        String
+  personId           String
+  targetId           String?
+  channel            EncounterChannel @default(MANUAL)
+  noteText           String
+  structuredSummary  Json?
+  tags               String[]
+  audioArtifactId    String?
+  transcriptArtifactId String?
+  occurredAt         DateTime         @default(now())
+  createdAt          DateTime         @default(now())
+
+  workspace          Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  person             Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  target             Target?   @relation(fields: [targetId], references: [id], onDelete: SetNull)
+  audioArtifact      Artifact? @relation("EncounterAudioArtifact", fields: [audioArtifactId], references: [id], onDelete: SetNull)
+  transcriptArtifact Artifact? @relation("EncounterTranscriptArtifact", fields: [transcriptArtifactId], references: [id], onDelete: SetNull)
+  followUpDrafts     FollowUpDraft[]
+
+  @@index([workspaceId, occurredAt])
+}
+
+model SessionNote {
+  id                 String   @id @default(cuid())
+  workspaceId        String
+  sessionId          String
+  speakerPersonId    String?
+  noteText           String
+  structuredSummary  Json?
+  tags               String[]
+  transcriptArtifactId String?
+  occurredAt         DateTime @default(now())
+  createdAt          DateTime @default(now())
+
+  workspace          Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  session            Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  speakerPerson      Person?   @relation(fields: [speakerPersonId], references: [id], onDelete: SetNull)
+  transcriptArtifact Artifact? @relation("SessionNoteTranscriptArtifact", fields: [transcriptArtifactId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, occurredAt])
+}
+
+model FollowUpDraft {
+  id          String      @id @default(cuid())
+  workspaceId String
+  personId    String
+  targetId    String?
+  encounterId String?
+  channel     DraftChannel @default(EMAIL)
+  subject     String
+  body        String
+  summary     String?
+  nextSteps   String[]
+  status      DraftStatus @default(GENERATED)
+  gmailDraftId String?
+  syncStatus  SyncStatus  @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  person    Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  target    Target?   @relation(fields: [targetId], references: [id], onDelete: SetNull)
+  encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, status, syncStatus])
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  workspaceId  String
+  personId     String
+  targetId     String?
+  title        String
+  body         String
+  dueAt        DateTime?
+  status       String     @default("OPEN")
+  hubspotTaskId String?
+  syncStatus   SyncStatus @default(PENDING)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  person    Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  target    Target?   @relation(fields: [targetId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, syncStatus])
+}
+
+model CrmMatch {
+  id                String      @id @default(cuid())
+  workspaceId       String
+  personId          String
+  provider          SyncProvider @default(HUBSPOT)
+  externalObjectType String      @default("contact")
+  externalObjectId  String
+  matchMethod       MatchMethod
+  confidence        Float?
+  reviewState       ReviewState @default(NOT_NEEDED)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  person    Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalObjectId, personId])
+  @@index([workspaceId, reviewState])
+}
+
+model ConnectorAccount {
+  id               String       @id @default(cuid())
+  workspaceId      String
+  provider         SyncProvider
+  externalAccountKey String?
+  tokenRef         String
+  scopes           String[]
+  connectedAt      DateTime     @default(now())
+  lastUsedAt       DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, provider])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  workspaceId String
+  actorKey   String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json
+  createdAt  DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([entityType, entityId])
+}
+
+model AppJob {
+  id          String    @id @default(cuid())
+  workspaceId String
+  jobType     JobType
+  status      JobStatus @default(QUEUED)
+  payload     Json
+  attemptCount Int      @default(0)
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([status, jobType])
+  @@index([workspaceId, createdAt])
+}

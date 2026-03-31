@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Conference Rep Copilot",
+  "version": "0.1.0",
+  "description": "Capture visible conference portal records into the rep workspace.",
+  "permissions": ["activeTab", "scripting", "storage", "sidePanel", "tabs"],
+  "host_permissions": ["http://localhost:3000/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Rep Copilot"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}

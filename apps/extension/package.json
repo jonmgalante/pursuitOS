@@ -1,0 +1,18 @@
+{
+  "name": "@copilot/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@copilot/portal-grip": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "@types/chrome": "^0.1.24"
+  }
+}
