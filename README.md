@@ -31,6 +31,7 @@ This repository is the locked MVP scaffold for a conference rep copilot:
 - The first slice is demoable now through a file-backed store in `apps/web/lib/store.ts`.
 - The extension captures visible Grip demo pages from the active tab into the web workspace.
 - HubSpot task creation and Gmail draft creation run in mock mode unless you set access tokens in `.env`.
+- Encounter note structuring and follow-up draft generation use deterministic fallback unless you set `OPENAI_API_KEY`.
 - The worker path is still scaffold-only.
 - The Prisma/Postgres path is now available as an opt-in first-slice backend; file mode remains the default.
 
@@ -43,7 +44,7 @@ pnpm db:generate
 pnpm check
 ```
 
-`.env` can stay empty for the default demo-first flow. Add `HUBSPOT_ACCESS_TOKEN` or `GMAIL_ACCESS_TOKEN` only if you want live sync instead of deterministic mock behavior.
+`.env` can stay empty for the default demo-first flow. Add `OPENAI_API_KEY` only if you want live OpenAI note structuring and follow-up draft generation instead of deterministic fallback behavior. Add `HUBSPOT_ACCESS_TOKEN` or `GMAIL_ACCESS_TOKEN` only if you want live sync instead of deterministic mock behavior.
 
 Set `COPILOT_FIRST_SLICE_BACKEND=prisma` only if you want the optional Postgres-backed repository. `DATABASE_URL` is optional when you use the bundled `docker-compose.yml` defaults and only needs to be set when your local Postgres URL differs.
 
@@ -138,6 +139,7 @@ It covers the current first slice end to end:
 - mark 3 people as targets
 - log 1 encounter through the current route/service path
 - generate 1 follow-up draft through the current non-live path
+- record fallback generation metadata when `OPENAI_API_KEY` is unset
 - create 1 mock HubSpot task
 - create 1 mock Gmail draft
 - verify met vs missed separation

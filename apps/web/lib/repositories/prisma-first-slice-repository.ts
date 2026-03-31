@@ -1244,6 +1244,7 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
           structuredSummary: {
             summary: input.structuredSummary,
             nextSteps: input.nextSteps,
+            generation: input.generationMetadata as unknown as Prisma.InputJsonObject,
             ...(outcome ? { outcome } : {}),
             ...(input.sessionId ? { sessionId: input.sessionId } : {}),
             ...(input.speakerPersonId ? { speakerPersonId: input.speakerPersonId } : {})
@@ -1265,7 +1266,8 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
           outcome: outcome ?? null,
           sessionId: input.sessionId ?? null,
           speakerPersonId: input.speakerPersonId ?? null,
-          tags: input.tags
+          tags: input.tags,
+          generation: input.generationMetadata
         }
       });
     });
@@ -1317,7 +1319,8 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
         entityId: draftId,
         metadata: {
           personId: input.personId,
-          encounterId: input.encounterId ?? null
+          encounterId: input.encounterId ?? null,
+          generation: input.generationMetadata
         }
       });
     });

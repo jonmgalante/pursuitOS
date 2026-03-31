@@ -1,7 +1,7 @@
 import { createGmailDraft, createHubSpotTask } from '@copilot/connectors';
 import {
-  generateFollowUpDraft,
   rankSessions,
+  type Company,
   type CapturePagePayload,
   type Encounter,
   type FollowUpDraft,
@@ -18,6 +18,7 @@ import {
 } from '../repositories/first-slice-repository';
 import { createFileFirstSliceRepository } from '../repositories/file-first-slice-repository';
 import { createPrismaFirstSliceRepository } from '../repositories/prisma-first-slice-repository';
+import { createGenerationService, type GenerationService } from './generation-service';
 
 export interface WorkspaceView {
   workspace: WorkspaceSummary;
@@ -46,41 +47,15 @@ export interface FirstSliceService {
   syncGmailDraftById(workspaceId: string, draftId: string): Promise<FollowUpDraft>;
 }
 
-function summarizeEncounter(noteText: string): { summary: string; nextSteps: string[] } {
-  const summary = noteText
-    .split(/(?<=[.!?])\s+/)
-    .slice(0, 2)
-    .join(' ')
-    .trim();
-
-  const nextSteps: string[] = [];
-  const lower = noteText.toLowerCase();
-
-  if (lower.includes('demo')) {
-    nextSteps.push('Schedule a demo follow-up.');
-  }
-  if (lower.includes('intro') || lower.includes('introduce')) {
-    nextSteps.push('Send the promised introduction.');
-  }
-  if (lower.includes('pricing') || lower.includes('budget')) {
-    nextSteps.push('Share pricing details or route the pricing follow-up.');
-  }
-  if (nextSteps.length === 0) {
-    nextSteps.push('Send a short recap and propose one concrete next step.');
-  }
-
-  return {
-    summary: summary || noteText,
-    nextSteps
-  };
-}
-
-function firstName(fullName: string): string {
-  return fullName.split(/\s+/)[0] ?? fullName;
+function companyNameForPerson(companies: Company[], companyId?: string): string | undefined {
+  return companies.find((company) => company.id === companyId)?.name;
 }
 
 class RepositoryBackedFirstSliceService implements FirstSliceService {
-  constructor(private readonly repository: FirstSliceRepository) {}
+  constructor(
+    private readonly repository: FirstSliceRepository,
+    private readonly generationService: GenerationService
+  ) {}
 
   async ensureDemoWorkspace(): Promise<string> {
     return this.repository.ensureDemoWorkspace();
@@ -141,7 +116,6 @@ class RepositoryBackedFirstSliceService implements FirstSliceService {
     const workspace = await this.repository.getWorkspaceViewData(params.workspaceId);
     const person = workspace.persons.find((item) => item.id === params.personId);
     const target = workspace.targets.find((item) => item.personId === params.personId);
-    const structured = summarizeEncounter(params.noteText);
     const selectedSession = params.sessionId
       ? workspace.sessions.find((item) => item.id === params.sessionId)
       : undefined;
@@ -173,6 +147,18 @@ class RepositoryBackedFirstSliceService implements FirstSliceService {
       throw new Error('Selected speaker is not attached to the selected session.');
     }
 
+    const structured = await this.generationService.structureEncounter({
+      event: workspace.event,
+      person,
+      target,
+      companyName: companyNameForPerson(workspace.companies, person.companyId),
+      noteText: params.noteText,
+      tags: params.tags,
+      outcome: params.outcome ?? (target ? 'MET' : undefined),
+      session: selectedSession,
+      speaker: selectedSpeaker
+    });
+
     return this.repository.createEncounter({
       workspaceId: params.workspaceId,
       personId: params.personId,
@@ -184,7 +170,8 @@ class RepositoryBackedFirstSliceService implements FirstSliceService {
       noteText: params.noteText,
       structuredSummary: structured.summary,
       nextSteps: structured.nextSteps,
-      tags: params.tags
+      tags: params.tags,
+      generationMetadata: structured.metadata
     });
   }
 
@@ -198,29 +185,21 @@ class RepositoryBackedFirstSliceService implements FirstSliceService {
 
     const encounter = workspace.encounters.find((item) => item.personId === personId);
     const target = workspace.targets.find((item) => item.personId === personId);
-
-    const draftContent = encounter
-      ? generateFollowUpDraft({
-          event: workspace.event,
-          person,
-          encounter
-        })
-      : {
-          subject: `Nice to connect before ${workspace.event.name}, ${firstName(person.fullName)}`,
-          body: [
-            `Hi ${firstName(person.fullName)},`,
-            '',
-            `I noticed you in the attendee list for ${workspace.event.name}.`,
-            `I would love to connect briefly during the event if it is relevant for ${person.title ?? 'your role'}.`,
-            '',
-            `If helpful, I can send over a short agenda or suggest a time to meet on-site.`,
-            '',
-            'Best,',
-            'Your Name'
-          ].join('\n'),
-          summary: 'Pre-event outreach draft generated because no encounter note exists yet.',
-          nextSteps: ['Propose a short event meeting or exchange a quick agenda.']
-        };
+    const selectedSession = encounter?.sessionId
+      ? workspace.sessions.find((item) => item.id === encounter.sessionId)
+      : undefined;
+    const selectedSpeaker = encounter?.speakerPersonId
+      ? workspace.persons.find((item) => item.id === encounter.speakerPersonId)
+      : undefined;
+    const draftContent = await this.generationService.generateDraft({
+      event: workspace.event,
+      person,
+      target,
+      companyName: companyNameForPerson(workspace.companies, person.companyId),
+      encounter,
+      session: selectedSession,
+      speaker: selectedSpeaker
+    });
 
     return this.repository.saveGeneratedDraft({
       workspaceId,
@@ -230,7 +209,8 @@ class RepositoryBackedFirstSliceService implements FirstSliceService {
       subject: draftContent.subject,
       body: draftContent.body,
       summary: draftContent.summary,
-      nextSteps: draftContent.nextSteps
+      nextSteps: draftContent.nextSteps,
+      generationMetadata: draftContent.metadata
     });
   }
 
@@ -323,9 +303,10 @@ function createConfiguredFirstSliceRepository(): FirstSliceRepository {
 }
 
 export function createFirstSliceService(
-  repository: FirstSliceRepository = createFileFirstSliceRepository()
+  repository: FirstSliceRepository = createFileFirstSliceRepository(),
+  generationService: GenerationService = createGenerationService()
 ): FirstSliceService {
-  return new RepositoryBackedFirstSliceService(repository);
+  return new RepositoryBackedFirstSliceService(repository, generationService);
 }
 
 let defaultFirstSliceService: FirstSliceService | undefined;

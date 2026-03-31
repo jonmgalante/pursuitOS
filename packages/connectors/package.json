@@ -5,5 +5,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@copilot/core": "workspace:^",
+    "openai": "^6.33.0"
   }
 }

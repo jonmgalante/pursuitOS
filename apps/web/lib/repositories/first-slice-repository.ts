@@ -6,6 +6,7 @@ import type {
   Encounter,
   Event,
   FollowUpDraft,
+  GenerationMetadata,
   Person,
   Session,
   SourceRecord,
@@ -65,6 +66,7 @@ export interface CreateEncounterRecordInput {
   structuredSummary: string;
   nextSteps: string[];
   tags: string[];
+  generationMetadata: GenerationMetadata;
 }
 
 export interface SaveGeneratedDraftInput {
@@ -76,6 +78,7 @@ export interface SaveGeneratedDraftInput {
   body: string;
   summary: string;
   nextSteps: string[];
+  generationMetadata: GenerationMetadata;
 }
 
 export interface ConnectorSyncResult {

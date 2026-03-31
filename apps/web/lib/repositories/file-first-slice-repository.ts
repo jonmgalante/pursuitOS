@@ -349,7 +349,8 @@ class FileFirstSliceRepository implements FirstSliceRepository {
         outcome: outcome ?? null,
         sessionId: input.sessionId ?? null,
         speakerPersonId: input.speakerPersonId ?? null,
-        tags: input.tags
+        tags: input.tags,
+        generation: input.generationMetadata
       }
     });
 
@@ -384,7 +385,8 @@ class FileFirstSliceRepository implements FirstSliceRepository {
       entityId: draft.id,
       metadata: {
         personId: input.personId,
-        encounterId: input.encounterId ?? null
+        encounterId: input.encounterId ?? null,
+        generation: input.generationMetadata
       }
     });
 

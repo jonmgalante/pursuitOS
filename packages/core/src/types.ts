@@ -13,6 +13,14 @@ export type SourceEntityType = 'PERSON' | 'SESSION';
 export type TargetPriority = 'MUST_MEET' | 'NICE_TO_MEET' | 'BACKUP';
 export type TargetStatus = 'TARGETED' | 'MET' | 'MISSED';
 export type EncounterChannel = 'MANUAL' | 'VOICE';
+export type GenerationMode = 'live' | 'fallback';
+export type GenerationProvider = 'OPENAI' | 'DETERMINISTIC';
+export type GenerationOperation = 'NOTE_STRUCTURING' | 'FOLLOW_UP_DRAFT';
+export type GenerationFallbackReason =
+  | 'OPENAI_API_KEY_MISSING'
+  | 'OPENAI_REQUEST_FAILED'
+  | 'OPENAI_OUTPUT_INVALID'
+  | 'NO_ENCOUNTER_CONTEXT';
 export type MatchMethod =
   | 'NONE'
   | 'DETERMINISTIC_EMAIL'
@@ -259,4 +267,16 @@ export interface RankedSession extends Session {
   score: number;
   reasons: string[];
   speakerNames: string[];
+}
+
+export interface GenerationMetadata {
+  mode: GenerationMode;
+  provider: GenerationProvider;
+  operation: GenerationOperation;
+  generatedAt: string;
+  promptId: string;
+  model?: string;
+  responseId?: string;
+  fallbackReason?: GenerationFallbackReason;
+  errorReason?: string;
 }

@@ -84,17 +84,26 @@ function personIdByName(
   return person.id;
 }
 
+function generationMetadataFromAudit(entry: { metadata: Record<string, unknown> }): Record<string, unknown> | undefined {
+  const value = entry.metadata.generation;
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
 async function main(): Promise<void> {
   const smokeRoot = path.join(os.tmpdir(), 'conference-rep-copilot-first-slice-smoke');
   const fileStoreDir = path.join(smokeRoot, 'data');
   const artifactsDir = path.join(smokeRoot, 'artifacts');
   const workspaceId = DEMO_WORKSPACE.id;
+  const originalOpenAIApiKey = process.env.OPENAI_API_KEY;
   const originalHubSpotAccessToken = process.env.HUBSPOT_ACCESS_TOKEN;
   const originalGmailAccessToken = process.env.GMAIL_ACCESS_TOKEN;
 
   await resetDir(smokeRoot);
   process.env.COPILOT_FILE_STORE_DIR = fileStoreDir;
   process.env.COPILOT_ARTIFACTS_DIR = artifactsDir;
+  delete process.env.OPENAI_API_KEY;
   delete process.env.HUBSPOT_ACCESS_TOKEN;
   delete process.env.GMAIL_ACCESS_TOKEN;
 
@@ -125,7 +134,7 @@ async function main(): Promise<void> {
     const refreshWorkspace = async () => repository.getWorkspaceViewData(workspaceId);
 
     console.log('First-slice smoke harness');
-    console.log(`Mode: file-backed store, mock HubSpot/Gmail connectors`);
+    console.log(`Mode: file-backed store, deterministic AI fallback, mock HubSpot/Gmail connectors`);
     console.log(`Isolated storage: ${smokeRoot}`);
 
     logStep('Seed the demo workspace through the current route');
@@ -472,6 +481,8 @@ async function main(): Promise<void> {
         return counts;
       }, {});
       const captureAuditLogs = workspace.auditLogs.filter((entry) => entry.action === 'capture.ingested');
+      const encounterAuditLogs = workspace.auditLogs.filter((entry) => entry.action === 'encounter.logged');
+      const draftAuditLogs = workspace.auditLogs.filter((entry) => entry.action === 'draft.generated');
       const hubspotAuditLogs = workspace.auditLogs.filter((entry) => entry.action === 'hubspot.task_synced');
       const gmailAuditLogs = workspace.auditLogs.filter((entry) => entry.action === 'gmail.draft_synced');
 
@@ -484,6 +495,28 @@ async function main(): Promise<void> {
         captureAuditLogs.length >= 2,
         `Expected at least 2 capture audit logs, got ${captureAuditLogs.length}.`,
         'Check audit log writes for capture ingest.'
+      );
+      expect(
+        encounterAuditLogs.some((entry) => {
+          const metadata = generationMetadataFromAudit(entry);
+          return (
+            metadata?.mode === 'fallback' &&
+            metadata.fallbackReason === 'OPENAI_API_KEY_MISSING'
+          );
+        }),
+        'Expected encounter logging to record deterministic fallback generation metadata.',
+        'Check encounter note structuring fallback metadata when OPENAI_API_KEY is missing.'
+      );
+      expect(
+        draftAuditLogs.some((entry) => {
+          const metadata = generationMetadataFromAudit(entry);
+          return (
+            metadata?.mode === 'fallback' &&
+            metadata.fallbackReason === 'OPENAI_API_KEY_MISSING'
+          );
+        }),
+        'Expected draft generation to record deterministic fallback generation metadata.',
+        'Check follow-up draft fallback metadata when OPENAI_API_KEY is missing.'
       );
       expect(
         hubspotAuditLogs.some((entry) => entry.metadata.mode === 'mock'),
@@ -503,6 +536,7 @@ async function main(): Promise<void> {
     console.log('Smoke harness passed.');
   } finally {
     restoreComputedStyle();
+    process.env.OPENAI_API_KEY = originalOpenAIApiKey;
     process.env.HUBSPOT_ACCESS_TOKEN = originalHubSpotAccessToken;
     process.env.GMAIL_ACCESS_TOKEN = originalGmailAccessToken;
   }

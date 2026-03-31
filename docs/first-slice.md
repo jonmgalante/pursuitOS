@@ -73,7 +73,7 @@ Prove the narrowest possible loop:
 - dedupe logic
 - target status workflow
 - encounter note persistence
-- draft generation logic
+- note structuring + draft generation service boundary with deterministic fallback
 - mock/live connector adapters
 - audit log entries
 
@@ -102,7 +102,7 @@ This scaffold is designed to map directly to the acceptance tests:
   Single form with tags and target select.
 
 - **generate a usable follow-up draft**  
-  Draft uses encounter + person + event context.
+  Draft uses encounter + person + target + event context, with deterministic fallback when `OPENAI_API_KEY` is unset.
 
 - **separate met vs missed**  
   Target status controls support targeted / met / missed.

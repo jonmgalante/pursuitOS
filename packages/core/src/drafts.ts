@@ -51,6 +51,44 @@ export interface GeneratedDraft {
   nextSteps: string[];
 }
 
+export interface NormalizedEncounterSummary {
+  summary: string;
+  nextSteps: string[];
+}
+
+export function normalizeEncounterNote(noteText: string): NormalizedEncounterSummary {
+  return {
+    summary: extractSummary(noteText),
+    nextSteps: inferNextSteps(noteText)
+  };
+}
+
+export function generatePreEventFollowUpDraft(params: {
+  event: Event;
+  person: Person;
+  senderName?: string;
+}): GeneratedDraft {
+  const { event, person, senderName = 'Your Name' } = params;
+  const name = firstName(person.fullName);
+
+  return {
+    subject: `Nice to connect before ${event.name}, ${name}`,
+    body: [
+      `Hi ${name},`,
+      '',
+      `I noticed you in the attendee list for ${event.name}.`,
+      `I would love to connect briefly during the event if it is relevant for ${person.title ?? 'your role'}.`,
+      '',
+      `If helpful, I can send over a short agenda or suggest a time to meet on-site.`,
+      '',
+      'Best,',
+      senderName
+    ].join('\n'),
+    summary: 'Pre-event outreach draft generated because no encounter note exists yet.',
+    nextSteps: ['Propose a short event meeting or exchange a quick agenda.']
+  };
+}
+
 export function generateFollowUpDraft(params: {
   event: Event;
   person: Person;
@@ -58,8 +96,9 @@ export function generateFollowUpDraft(params: {
   senderName?: string;
 }): GeneratedDraft {
   const { event, person, encounter, senderName = 'Your Name' } = params;
-  const summary = extractSummary(encounter.noteText);
-  const nextSteps = inferNextSteps(encounter.noteText);
+  const structuredEncounter = normalizeEncounterNote(encounter.noteText);
+  const summary = structuredEncounter.summary;
+  const nextSteps = structuredEncounter.nextSteps;
   const name = firstName(person.fullName);
   const bullets = nextSteps.map((step) => `- ${step}`).join('\n');
 
