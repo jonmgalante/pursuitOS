@@ -1,0 +1,4 @@
+# Repo-local Codex defaults for the locked MVP scaffold.
+# Favor higher-reasoning passes to keep baseline docs/config changes small and precise.
+model = "gpt-5.4"
+model_reasoning_effort = "high"

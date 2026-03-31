@@ -1,6 +1,6 @@
 # Conference Rep Copilot MVP
 
-This repository is a starter monorepo for the locked MVP:
+This repository is the locked MVP scaffold for a conference rep copilot:
 
 - a Chrome extension that works inside an authorized conference portal session
 - a Next.js web app for the event workspace
@@ -26,50 +26,83 @@ This repository is a starter monorepo for the locked MVP:
   - generate a follow-up draft
   - sync a HubSpot task and Gmail draft in mock mode by default
 
-## Important implementation note
+## Current scaffold status
 
-The first slice is intentionally split into two layers:
+- The first slice is demoable now through a file-backed store in `apps/web/lib/store.ts`.
+- The web app is the canonical operator workspace.
+- The extension captures visible Grip demo pages from the active tab into that workspace.
+- HubSpot task creation and Gmail draft creation run in mock mode unless you set access tokens in `.env`.
+- The worker is still a scaffold; `pnpm dev:worker` prints placeholder job output and exits.
+- Prisma/Postgres is present as schema/tooling only and is not required for the current demo flow.
 
-1. **Demo-runnable layer**  
-   The web app uses a file-backed store in `apps/web/lib/store.ts` so the first slice works immediately without Postgres or OAuth.
-
-2. **Production schema + connector layer**  
-   The Prisma schema, worker app, and HubSpot/Gmail connector modules are scaffolded for the production path, but they are not fully wired into the web app yet.
-
-That means the repo is honest about what is complete today:
-- the end-to-end flow is demoable now
-- the production persistence and auth token flows are scaffolded next
-
-## Quick start
+## Local setup
 
 ```bash
 pnpm install
 cp .env.example .env
+pnpm check
+```
 
-# optional: for the future Postgres-backed path
-docker compose up -d postgres
+`.env` can stay empty for the default demo-first flow. Add `HUBSPOT_ACCESS_TOKEN` or `GMAIL_ACCESS_TOKEN` only if you want live sync instead of deterministic mock behavior. `DATABASE_URL` is only for `packages/db` tooling and is not needed for the local demo.
 
-# web app
+## Run the apps
+
+```bash
 pnpm dev:web
 
-# worker scaffold
+# worker scaffold; prints placeholder jobs and exits
 pnpm dev:worker
 
-# extension build
+# extension watch build
 pnpm dev:extension
 ```
 
-Then:
+Use `pnpm --filter @copilot/extension build` if you only want a one-off extension build.
 
-1. open `http://localhost:3000`
-2. create the demo workspace
-3. open:
-   - `http://localhost:3000/demo/grip/attendees`
-   - `http://localhost:3000/demo/grip/sessions`
-4. load `apps/extension/dist` as an unpacked extension in Chrome
-5. set the workspace id in the side panel
-6. click **Capture current page**
-7. return to the workspace page and complete the target / encounter / draft / sync flow
+## Load the extension in Chrome
+
+1. Open `chrome://extensions`.
+2. Enable Developer mode.
+3. Click **Load unpacked**.
+4. Select `apps/extension/dist`.
+5. Open the side panel from the toolbar.
+6. Keep the web app URL at `http://localhost:3000`.
+7. Use workspace ID `ws_demo_summit_2026`.
+
+If you are running `pnpm dev:extension`, Chrome will still need an extension reload after each rebuilt change.
+
+## First local demo flow
+
+1. Open `http://localhost:3000`.
+2. Click **Create or open demo workspace**.
+3. Open `http://localhost:3000/demo/grip/attendees` and capture the page from the extension side panel.
+4. Open `http://localhost:3000/demo/grip/sessions` and capture that page too.
+5. Return to `http://localhost:3000/workspaces/ws_demo_summit_2026`.
+6. Mark three people as Targets.
+7. Log one encounter.
+8. Generate one follow-up draft.
+9. Create one HubSpot task and one Gmail draft.
+
+The default sync mode is mock. Gmail remains draft-only even when a live token is present.
+
+## Baseline validation
+
+```bash
+pnpm check
+```
+
+`pnpm check` currently runs the real baseline validations only: `pnpm typecheck` and `pnpm build`.
+
+## Generated local artifacts
+
+Do not commit local runtime/build output such as:
+
+- `apps/web/.data`
+- `apps/web/.artifacts`
+- `apps/web/.next`
+- `apps/extension/dist`
+- `apps/worker/dist`
+- `.env`
 
 ## Repo principles
 

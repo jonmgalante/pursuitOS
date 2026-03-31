@@ -4,6 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@10.0.0",
   "scripts": {
+    "check": "pnpm typecheck && pnpm build",
     "dev:web": "pnpm --filter @copilot/web dev",
     "dev:worker": "pnpm --filter @copilot/worker dev",
     "dev:extension": "pnpm --filter @copilot/extension dev",
