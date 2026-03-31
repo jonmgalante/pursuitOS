@@ -1,6 +1,6 @@
 import type { CapturePagePayload } from '@copilot/core';
 import { corsJson } from '../../../lib/http';
-import { ingestCapture } from '../../../lib/store';
+import { getFirstSliceService } from '../../../lib/services/first-slice-service';
 
 export const runtime = 'nodejs';
 
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await ingestCapture(body.workspaceId, body.capture);
+  const result = await getFirstSliceService().ingestCapture(body.workspaceId, body.capture);
 
   return corsJson({
     ok: true,

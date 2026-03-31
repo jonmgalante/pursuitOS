@@ -1,6 +1,6 @@
 import type { Encounter } from '@copilot/core';
 import { redirectTo } from '../../../lib/http';
-import { logEncounter } from '../../../lib/store';
+import { getFirstSliceService } from '../../../lib/services/first-slice-service';
 
 export const runtime = 'nodejs';
 
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   const capturedVia = String(formData.get('capturedVia') ?? 'MANUAL') as Encounter['capturedVia'];
   const tags = formData.getAll('tags').map((value) => String(value));
 
-  await logEncounter({
+  await getFirstSliceService().logEncounter({
     workspaceId,
     personId,
     noteText,

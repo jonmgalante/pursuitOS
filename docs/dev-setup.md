@@ -6,15 +6,15 @@
 2. Copy `.env.example` to `.env`.
 3. Run `pnpm check` to confirm the baseline build and typecheck pass.
 4. Start the web app with `pnpm dev:web`.
-5. Run `pnpm dev:worker` if you want to inspect the current worker scaffold output. It prints placeholder jobs and exits.
-6. Build the extension with `pnpm dev:extension` for watch mode or `pnpm --filter @copilot/extension build` for a one-off build.
+5. Run `pnpm dev:worker` only if you want to inspect the current worker scaffold output. It prints placeholder jobs and exits.
+6. Run `pnpm dev:extension` for watch mode, or `pnpm --filter @copilot/extension build` for a one-off build.
 
 ## Expected Environment Variables
 
 - None are required for the default demo-first file-backed flow.
 - `HUBSPOT_ACCESS_TOKEN` enables live HubSpot task creation instead of mock mode.
 - `GMAIL_ACCESS_TOKEN` enables live Gmail draft creation instead of mock mode.
-- `DATABASE_URL` is only needed for `packages/db` Prisma tooling and is not part of the current web demo flow.
+- `DATABASE_URL` is only for `packages/db` Prisma tooling and is not part of the current web demo flow.
 
 ## Loading the Chrome Extension
 
@@ -23,10 +23,9 @@
 3. Choose Load unpacked.
 4. Select `apps/extension/dist`.
 5. Open the extension side panel from the toolbar.
-6. Confirm the web app URL is `http://localhost:3000`.
-7. Confirm the workspace ID is `ws_demo_summit_2026`.
-8. Use the capture action on a visible Grip demo page.
-9. If you rebuild the extension while Chrome is open, click Reload on the extension before testing again.
+6. Confirm the web app URL is `http://localhost:3000` and the workspace ID is `ws_demo_summit_2026`.
+7. Use the capture action on a visible Grip demo page.
+8. If you rebuild the extension while Chrome is open, click Reload on the extension before testing again.
 
 ## Demo Flow
 
@@ -39,7 +38,6 @@
 
 ## Troubleshooting
 
-- If `pnpm check` fails, fix that baseline issue before starting the demo flow.
 - If the extension side panel opens but capture fails, confirm the active tab is a demo Grip page and that the web app URL matches the local server.
 - If capture requests do not reach the web app, keep the web app on `http://localhost:3000`; the extension manifest currently grants host access only for that origin.
 - If the web app shows an empty workspace, seed the demo workspace again from the home page or `POST /api/demo/seed`.

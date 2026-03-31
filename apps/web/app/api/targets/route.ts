@@ -1,6 +1,6 @@
 import type { TargetPriority, TargetStatus } from '@copilot/core';
 import { redirectTo } from '../../../lib/http';
-import { markTarget, updateTargetStatus } from '../../../lib/store';
+import { getFirstSliceService } from '../../../lib/services/first-slice-service';
 
 export const runtime = 'nodejs';
 
@@ -13,11 +13,11 @@ export async function POST(request: Request) {
 
   if (intent === 'status') {
     const status = String(formData.get('status') ?? 'TARGETED') as TargetStatus;
-    await updateTargetStatus(workspaceId, personId, status);
+    await getFirstSliceService().updateTargetStatus(workspaceId, personId, status);
     return redirectTo(request, redirectPath);
   }
 
   const priority = String(formData.get('priority') ?? 'BACKUP') as TargetPriority;
-  await markTarget(workspaceId, personId, priority);
+  await getFirstSliceService().markTarget(workspaceId, personId, priority);
   return redirectTo(request, redirectPath);
 }

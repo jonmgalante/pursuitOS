@@ -1,10 +1,11 @@
-import { ensureDemoWorkspace, listWorkspaces } from '../lib/store';
+import { getFirstSliceService } from '../lib/services/first-slice-service';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  await ensureDemoWorkspace();
-  const workspaces = await listWorkspaces();
+  const service = getFirstSliceService();
+  await service.ensureDemoWorkspace();
+  const workspaces = await service.listWorkspaces();
 
   return (
     <div className="grid">

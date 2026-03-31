@@ -29,11 +29,9 @@ This repository is the locked MVP scaffold for a conference rep copilot:
 ## Current scaffold status
 
 - The first slice is demoable now through a file-backed store in `apps/web/lib/store.ts`.
-- The web app is the canonical operator workspace.
-- The extension captures visible Grip demo pages from the active tab into that workspace.
+- The extension captures visible Grip demo pages from the active tab into the web workspace.
 - HubSpot task creation and Gmail draft creation run in mock mode unless you set access tokens in `.env`.
-- The worker is still a scaffold; `pnpm dev:worker` prints placeholder job output and exits.
-- Prisma/Postgres is present as schema/tooling only and is not required for the current demo flow.
+- The worker and Prisma/Postgres paths are scaffolded and are not required for the current demo flow.
 
 ## Local setup
 
@@ -65,9 +63,8 @@ Use `pnpm --filter @copilot/extension build` if you only want a one-off extensio
 2. Enable Developer mode.
 3. Click **Load unpacked**.
 4. Select `apps/extension/dist`.
-5. Open the side panel from the toolbar.
-6. Keep the web app URL at `http://localhost:3000`.
-7. Use workspace ID `ws_demo_summit_2026`.
+5. Open the side panel from the toolbar and keep the web app URL at `http://localhost:3000`.
+6. Use workspace ID `ws_demo_summit_2026`.
 
 If you are running `pnpm dev:extension`, Chrome will still need an extension reload after each rebuilt change.
 
@@ -91,7 +88,7 @@ The default sync mode is mock. Gmail remains draft-only even when a live token i
 pnpm check
 ```
 
-`pnpm check` currently runs the real baseline validations only: `pnpm typecheck` and `pnpm build`.
+`pnpm check` runs the current baseline validations only: `pnpm typecheck` and `pnpm build`.
 
 ## Generated local artifacts
 

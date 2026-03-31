@@ -1,5 +1,5 @@
 import { redirectTo } from '../../../../../lib/http';
-import { syncGmailDraftById } from '../../../../../lib/store';
+import { getFirstSliceService } from '../../../../../lib/services/first-slice-service';
 
 export const runtime = 'nodejs';
 
@@ -9,6 +9,6 @@ export async function POST(request: Request) {
   const draftId = String(formData.get('draftId') ?? '');
   const redirectPath = String(formData.get('redirectTo') ?? '/');
 
-  await syncGmailDraftById(workspaceId, draftId);
+  await getFirstSliceService().syncGmailDraftById(workspaceId, draftId);
   return redirectTo(request, redirectPath);
 }

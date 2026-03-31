@@ -1,5 +1,5 @@
-import { getWorkspaceView } from '../../../lib/store';
 import type { Person, Target, TargetPriority, TargetStatus } from '@copilot/core';
+import { getFirstSliceService } from '../../../lib/services/first-slice-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +31,7 @@ export default async function WorkspacePage({
   params: Promise<{ workspaceId: string }>;
 }) {
   const { workspaceId } = await params;
-  const view = await getWorkspaceView(workspaceId);
+  const view = await getFirstSliceService().getWorkspaceView(workspaceId);
   const { workspace, event, persons, companies, targets, encounters, drafts, tasks, captureBatches, auditLogs } =
     view.workspace;
 
