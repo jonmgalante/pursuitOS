@@ -5,6 +5,17 @@ export const dynamic = 'force-dynamic';
 export default function DemoGripAttendeeProfilePage() {
   const attendee = demoAttendeeCards()[0];
 
+  if (!attendee) {
+    return (
+      <div className="demo-shell">
+        <div className="card">
+          <h2>Grip demo — attendee profile</h2>
+          <p className="muted">No demo attendee was found.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="demo-shell">
       <div className="demo-toolbar">

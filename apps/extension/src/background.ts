@@ -5,6 +5,11 @@ interface ExtensionSettings {
   workspaceId: string;
 }
 
+interface RuntimeMessage {
+  type?: 'GET_SETTINGS' | 'SAVE_SETTINGS' | 'OPEN_WORKSPACE' | 'CAPTURE_CURRENT_TAB';
+  payload?: Partial<ExtensionSettings>;
+}
+
 const DEFAULT_SETTINGS: ExtensionSettings = {
   webAppUrl: 'http://localhost:3000',
   workspaceId: 'ws_demo_summit_2026'
@@ -12,46 +17,54 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
 
 chrome.runtime.onInstalled.addListener(async () => {
   await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
-  const settings = await chrome.storage.local.get(DEFAULT_SETTINGS);
-  await chrome.storage.local.set(settings);
+  const settings = await chrome.storage.local.get<ExtensionSettings>(DEFAULT_SETTINGS);
+  await chrome.storage.local.set<ExtensionSettings>(settings);
 });
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.type === 'GET_SETTINGS') {
-    chrome.storage.local.get(DEFAULT_SETTINGS).then(sendResponse);
-    return true;
-  }
+chrome.runtime.onMessage.addListener(
+  (
+  message: RuntimeMessage,
+  _sender,
+  sendResponse
+) =>{
+    if (message?.type === 'GET_SETTINGS') {
+      chrome.storage.local.get<ExtensionSettings>(DEFAULT_SETTINGS).then(sendResponse);
+      return true;
+    }
 
-  if (message?.type === 'SAVE_SETTINGS') {
-    chrome.storage.local.set(message.payload).then(() => sendResponse({ ok: true }));
-    return true;
-  }
+    if (message?.type === 'SAVE_SETTINGS') {
+      chrome.storage.local.set<ExtensionSettings>(message.payload ?? {}).then(() => sendResponse({ ok: true }));
+      return true;
+    }
 
-  if (message?.type === 'OPEN_WORKSPACE') {
-    chrome.storage.local.get(DEFAULT_SETTINGS).then((settings) => {
-      chrome.tabs.create({
-        url: `${settings.webAppUrl}/workspaces/${settings.workspaceId}`
+    if (message?.type === 'OPEN_WORKSPACE') {
+      chrome.storage.local.get<ExtensionSettings>(DEFAULT_SETTINGS).then((settings) => {
+        chrome.tabs.create({
+          url: `${settings.webAppUrl}/workspaces/${settings.workspaceId}`
+        });
+        sendResponse({ ok: true });
       });
-      sendResponse({ ok: true });
-    });
-    return true;
-  }
+      return true;
+    }
 
-  if (message?.type === 'CAPTURE_CURRENT_TAB') {
-    captureCurrentTab().then(sendResponse).catch((error: Error) => {
-      sendResponse({
-        ok: false,
-        error: error.message
-      });
-    });
-    return true;
-  }
+    if (message?.type === 'CAPTURE_CURRENT_TAB') {
+      captureCurrentTab()
+        .then(sendResponse)
+        .catch((error: Error) => {
+          sendResponse({
+            ok: false,
+            error: error.message
+          });
+        });
+      return true;
+    }
 
-  return false;
-});
+    return false;
+  }
+);
 
 async function captureCurrentTab() {
-  const settings = (await chrome.storage.local.get(DEFAULT_SETTINGS)) as ExtensionSettings;
+  const settings = await chrome.storage.local.get<ExtensionSettings>(DEFAULT_SETTINGS);
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
 
   if (!tab?.id) {
