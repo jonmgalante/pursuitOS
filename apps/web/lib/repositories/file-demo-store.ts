@@ -2,9 +2,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { createId, type DemoStore, DEMO_HUBSPOT_DIRECTORY } from '@copilot/core';
 
-const STORE_DIR = path.join(process.cwd(), '.data');
+const STORE_DIR = path.resolve(process.cwd(), process.env.COPILOT_FILE_STORE_DIR ?? '.data');
 const STORE_PATH = path.join(STORE_DIR, 'demo-store.json');
-const ARTIFACTS_DIR = path.join(process.cwd(), '.artifacts');
+const ARTIFACTS_DIR = path.resolve(process.cwd(), process.env.COPILOT_ARTIFACTS_DIR ?? '.artifacts');
 
 function emptyDemoStore(): DemoStore {
   return {

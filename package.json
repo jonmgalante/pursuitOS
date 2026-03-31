@@ -8,6 +8,7 @@
     "dev:web": "pnpm --filter @copilot/web dev",
     "dev:worker": "pnpm --filter @copilot/worker dev",
     "dev:extension": "pnpm --filter @copilot/extension dev",
+    "smoke:first-slice": "pnpm --filter @copilot/web run smoke:first-slice",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "db:generate": "pnpm --filter @copilot/db prisma generate",

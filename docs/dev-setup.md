@@ -36,6 +36,20 @@
 5. Return to `/workspaces/ws_demo_summit_2026`.
 6. Mark targets, log an encounter, generate a follow-up draft, create a HubSpot task, and create a Gmail draft.
 
+## Automated Smoke Harness
+
+Run `pnpm smoke:first-slice` from the repo root for the repeatable first-slice regression check.
+
+The harness:
+
+- runs in isolated file mode by default
+- forces mock HubSpot and Gmail sync even if live tokens are present
+- captures the demo attendee and session pages with the current Grip extractor
+- drives the current target, encounter, draft, and sync routes without manual browser clicking
+- verifies the 25-record capture floor, met vs missed separation, and audit log coverage for capture and sync
+
+If the smoke command fails, treat it as a broken first-slice path. The output tells you which step failed and what to inspect first.
+
 ## Troubleshooting
 
 - If the extension side panel opens but capture fails, confirm the active tab is a demo Grip page and that the web app URL matches the local server.

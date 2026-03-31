@@ -1,15 +1,19 @@
-import { demoAttendeeCards } from '../../../../../lib/store';
+import {
+  DEMO_GRIP_ATTENDEE_PROFILE_DESCRIPTION,
+  DEMO_GRIP_ATTENDEE_PROFILE_PAGE_TITLE,
+  getDemoGripAttendeeProfileFixture
+} from '../../../../../lib/demo-grip-fixtures';
 
 export const dynamic = 'force-dynamic';
 
 export default function DemoGripAttendeeProfilePage() {
-  const attendee = demoAttendeeCards()[0];
+  const attendee = getDemoGripAttendeeProfileFixture();
 
   if (!attendee) {
     return (
       <div className="demo-shell">
         <div className="card">
-          <h2>Grip demo — attendee profile</h2>
+          <h2>{DEMO_GRIP_ATTENDEE_PROFILE_PAGE_TITLE}</h2>
           <p className="muted">No demo attendee was found.</p>
         </div>
       </div>
@@ -20,19 +24,14 @@ export default function DemoGripAttendeeProfilePage() {
     <div className="demo-shell">
       <div className="demo-toolbar">
         <div className="card" data-grip-page="attendee-profile">
-          <h2>Grip demo — attendee profile</h2>
-          <p className="muted">Profile page example for page snapshot + provenance handling.</p>
+          <h2>{DEMO_GRIP_ATTENDEE_PROFILE_PAGE_TITLE}</h2>
+          <p className="muted">{DEMO_GRIP_ATTENDEE_PROFILE_DESCRIPTION}</p>
         </div>
       </div>
 
       <article
         className="portal-card"
-        data-grip-card-type="attendee"
-        data-person-external-id={attendee.externalKey}
-        data-attendee-name={attendee.fullName}
-        data-attendee-title={attendee.title}
-        data-company={attendee.companyName}
-        data-email={attendee.email}
+        {...attendee.dataAttributes}
       >
         <h3 data-field="name">{attendee.fullName}</h3>
         <div className="portal-meta">

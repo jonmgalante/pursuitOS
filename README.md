@@ -90,6 +90,32 @@ pnpm check
 
 `pnpm check` runs the current baseline validations only: `pnpm typecheck` and `pnpm build`.
 
+## Automated smoke harness
+
+Run the first-slice smoke harness with:
+
+```bash
+pnpm smoke:first-slice
+```
+
+The smoke harness runs entirely in isolated file mode with mock HubSpot and Gmail sync. It does not require manual browser clicking, Chrome, real OAuth, or external network access.
+
+It covers the current first slice end to end:
+
+- seed the demo workspace
+- capture the demo Grip attendee page
+- capture the demo Grip session page
+- verify at least 25 attendee/speaker/session source records
+- mark 3 people as targets
+- log 1 encounter through the current route/service path
+- generate 1 follow-up draft through the current non-live path
+- create 1 mock HubSpot task
+- create 1 mock Gmail draft
+- verify met vs missed separation
+- verify audit log coverage for capture and sync
+
+A smoke failure means the existing first-slice regression path is broken somewhere in capture, target workflow, encounter logging, draft generation, sync, provenance, or audit logging. The command prints the failing step and a targeted hint for where to look first.
+
 ## Generated local artifacts
 
 Do not commit local runtime/build output such as:

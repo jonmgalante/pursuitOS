@@ -1,33 +1,29 @@
-import { demoAttendeeCards } from '../../../../lib/store';
+import {
+  DEMO_GRIP_ATTENDEE_LIST_DESCRIPTION,
+  DEMO_GRIP_ATTENDEE_LIST_PAGE_TITLE,
+  listDemoGripAttendeeCardFixtures
+} from '../../../../lib/demo-grip-fixtures';
 
 export const dynamic = 'force-dynamic';
 
 export default function DemoGripAttendeesPage() {
-  const attendees = demoAttendeeCards();
+  const attendees = listDemoGripAttendeeCardFixtures();
 
   return (
     <div className="demo-shell">
       <div className="demo-toolbar">
         <div className="card">
-          <h2>Grip demo — attendee search results</h2>
-          <p className="muted">
-            This page is intentionally instrumented with stable DOM attributes so the extension can capture visible
-            attendee records in the first MVP slice.
-          </p>
+          <h2>{DEMO_GRIP_ATTENDEE_LIST_PAGE_TITLE}</h2>
+          <p className="muted">{DEMO_GRIP_ATTENDEE_LIST_DESCRIPTION}</p>
         </div>
       </div>
 
       <div className="portal-list">
         {attendees.map((attendee) => (
           <article
-            key={attendee.externalKey}
+            key={attendee.key}
             className="portal-card"
-            data-grip-card-type="attendee"
-            data-person-external-id={attendee.externalKey}
-            data-attendee-name={attendee.fullName}
-            data-attendee-title={attendee.title}
-            data-company={attendee.companyName}
-            data-email={attendee.email}
+            {...attendee.dataAttributes}
           >
             <h3 data-field="name">{attendee.fullName}</h3>
             <div className="portal-meta">
@@ -40,9 +36,11 @@ export default function DemoGripAttendeesPage() {
               </a>
             </p>
             <div className="pill-list">
-              <span className="pill">attendee</span>
-              <span className="pill">visible</span>
-              <span className="pill">search result card</span>
+              {attendee.pills.map((pill) => (
+                <span key={`${attendee.key}-${pill}`} className="pill">
+                  {pill}
+                </span>
+              ))}
             </div>
           </article>
         ))}
