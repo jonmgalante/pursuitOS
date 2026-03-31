@@ -1,8 +1,20 @@
 export {};
 
+import {
+  createExtensionCaptureErrorResponse,
+  createExtensionCaptureRequest,
+  parseExtensionCaptureResponse,
+  type ExtensionCaptureResponse,
+  type ExtensionCaptureSummary
+} from '@copilot/portal-grip';
+
 interface ExtensionSettings {
   webAppUrl: string;
   workspaceId: string;
+}
+
+interface ExtensionStoredState extends ExtensionSettings {
+  lastCaptureSummary?: ExtensionCaptureSummary;
 }
 
 interface RuntimeMessage {
@@ -17,8 +29,8 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
 
 chrome.runtime.onInstalled.addListener(async () => {
   await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
-  const settings = await chrome.storage.local.get<ExtensionSettings>(DEFAULT_SETTINGS);
-  await chrome.storage.local.set<ExtensionSettings>(settings);
+  const settings = await chrome.storage.local.get<ExtensionStoredState>(DEFAULT_SETTINGS);
+  await chrome.storage.local.set<ExtensionStoredState>(settings);
 });
 
 chrome.runtime.onMessage.addListener(
@@ -28,7 +40,7 @@ chrome.runtime.onMessage.addListener(
   sendResponse
 ) =>{
     if (message?.type === 'GET_SETTINGS') {
-      chrome.storage.local.get<ExtensionSettings>(DEFAULT_SETTINGS).then(sendResponse);
+      chrome.storage.local.get<ExtensionStoredState>(DEFAULT_SETTINGS).then(sendResponse);
       return true;
     }
 
@@ -64,11 +76,19 @@ chrome.runtime.onMessage.addListener(
 );
 
 async function captureCurrentTab() {
-  const settings = await chrome.storage.local.get<ExtensionSettings>(DEFAULT_SETTINGS);
+  const settings = await chrome.storage.local.get<ExtensionStoredState>(DEFAULT_SETTINGS);
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
 
   if (!tab?.id) {
     throw new Error('No active tab found.');
+  }
+
+  if (!tab.active) {
+    throw new Error('Capture is limited to the current active tab.');
+  }
+
+  if (!tab.url || !/^https?:\/\//.test(tab.url)) {
+    throw new Error('Open a live Grip page in an http or https tab before capturing.');
   }
 
   await chrome.scripting.executeScript({
@@ -77,25 +97,35 @@ async function captureCurrentTab() {
   });
 
   const pageCapture = await chrome.tabs.sendMessage(tab.id, { type: 'CAPTURE_VISIBLE' });
+  if (!pageCapture || !Array.isArray(pageCapture.records)) {
+    return createExtensionCaptureErrorResponse('Capture failed because the page payload was malformed.');
+  }
+
+  if (pageCapture.records.length === 0) {
+    return createExtensionCaptureErrorResponse(
+      'No visible Grip attendee, speaker, or session records were found on this page.'
+    );
+  }
 
   const response = await fetch(`${settings.webAppUrl}/api/capture`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      workspaceId: settings.workspaceId,
-      capture: pageCapture
-    })
+    body: JSON.stringify(createExtensionCaptureRequest(settings.workspaceId, pageCapture))
   });
 
-  const result = await response.json();
-  await chrome.storage.local.set({
-    lastCaptureResult: result
-  });
+  const result = parseExtensionCaptureResponse(await response.json());
 
-  return {
-    ok: response.ok,
-    result
-  };
+  if (result.ok) {
+    await chrome.storage.local.set<ExtensionStoredState>({
+      lastCaptureSummary: result.summary
+    });
+  }
+
+  if (!response.ok && !result.ok) {
+    return result;
+  }
+
+  return result satisfies ExtensionCaptureResponse;
 }

@@ -1,3 +1,4 @@
+export * from './capture-contract';
 export * from './demo-data';
 export * from './drafts';
 export * from './ids';

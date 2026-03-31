@@ -101,8 +101,10 @@ export interface CaptureBatch {
   pageType: CapturePageType;
   pageUrl: string;
   pageTitle: string;
+  pageTextSummary?: string;
   captureMethod: CaptureMethod;
   pageArtifactId?: string;
+  extractorVersion?: string;
   capturedAt: string;
   recordCount: number;
 }
@@ -114,7 +116,10 @@ export interface Provenance {
   pageUrl: string;
   pageTitle: string;
   capturedAt: string;
+  pageTextSummary?: string;
   extractorVersion: string;
+  sourceArtifactId?: string;
+  sourceArtifactKind?: Artifact['kind'];
   selectorHints: string[];
 }
 
@@ -240,6 +245,8 @@ export interface CapturePagePayload {
   pageType: CapturePageType;
   pageUrl: string;
   pageTitle: string;
+  pageTextSummary: string;
+  capturedAt: string;
   pageHtml?: string;
   extractorVersion: string;
   records: CaptureRecord[];

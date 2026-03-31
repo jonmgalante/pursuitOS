@@ -6,6 +6,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "test:extractor": "node --import tsx/esm test/extractor.test.ts"
+  },
   "dependencies": {
     "@copilot/core": "workspace:*"
   }

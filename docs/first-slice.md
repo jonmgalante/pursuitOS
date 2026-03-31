@@ -48,7 +48,7 @@ Prove the narrowest possible loop:
 - capture current page from the active tab
 - save workspace id + app URL in extension storage
 - inject content script only on demand
-- send extracted records + page HTML snapshot to the web app
+- send a versioned capture envelope to the web app with extracted records, page provenance, a stable visible-text summary, and the page HTML snapshot
 
 ## Demo flow
 

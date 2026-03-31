@@ -122,9 +122,11 @@ class FileFirstSliceRepository implements FirstSliceRepository {
       pageType: capture.pageType,
       pageUrl: capture.pageUrl,
       pageTitle: capture.pageTitle,
+      pageTextSummary: capture.pageTextSummary,
       captureMethod: capture.captureMethod,
       pageArtifactId,
-      capturedAt: nowIso(),
+      extractorVersion: capture.extractorVersion,
+      capturedAt: capture.capturedAt,
       recordCount: capture.records.length
     });
 
@@ -149,12 +151,15 @@ class FileFirstSliceRepository implements FirstSliceRepository {
           pageType: capture.pageType,
           pageUrl: capture.pageUrl,
           pageTitle: capture.pageTitle,
-          capturedAt: nowIso(),
+          capturedAt: capture.capturedAt,
+          pageTextSummary: capture.pageTextSummary,
           extractorVersion: capture.extractorVersion,
+          sourceArtifactId: pageArtifactId,
+          sourceArtifactKind: pageArtifactId ? 'page_html' : undefined,
           selectorHints: record.selectorHints
         },
         rawHtmlSnippet: record.rawHtmlSnippet,
-        createdAt: nowIso()
+        createdAt: capture.capturedAt
       };
 
       if (record.entityType === 'PERSON') {
