@@ -57,6 +57,9 @@ export interface CreateEncounterRecordInput {
   workspaceId: string;
   personId: string;
   targetId?: string;
+  outcome?: 'MET' | 'MISSED';
+  sessionId?: string;
+  speakerPersonId?: string;
   capturedVia: Encounter['capturedVia'];
   noteText: string;
   structuredSummary: string;

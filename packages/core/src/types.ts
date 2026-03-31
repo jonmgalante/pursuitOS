@@ -158,6 +158,9 @@ export interface Encounter {
   workspaceId: string;
   personId: string;
   targetId?: string;
+  outcome?: 'MET' | 'MISSED';
+  sessionId?: string;
+  speakerPersonId?: string;
   capturedVia: EncounterChannel;
   noteText: string;
   structuredSummary: string;

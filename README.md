@@ -86,6 +86,16 @@ If you are running `pnpm dev:extension`, Chrome will still need an extension rel
 
 The default sync mode is mock. Gmail remains draft-only even when a live token is present.
 
+## Field mode manual smoke
+
+Use field mode to confirm the new in-event encounter flow quickly:
+
+1. Seed and capture the demo workspace, then open `http://localhost:3000/workspaces/ws_demo_summit_2026/field`.
+2. Tap a quick-pick Target or search for a captured person.
+3. Enter a short encounter note, tap `Met` or `Missed`, and add any one-tap tags you need.
+4. Optionally attach session or speaker context if the note came from a specific session.
+5. Submit and confirm the success message keeps you on field mode and the new entry appears in Recent activity.
+
 ## Optional Prisma Mode
 
 The web app still defaults to the file-backed repository. To opt into Prisma mode locally:

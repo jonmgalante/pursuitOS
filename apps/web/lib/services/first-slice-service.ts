@@ -36,6 +36,9 @@ export interface FirstSliceService {
     personId: string;
     noteText: string;
     tags: string[];
+    outcome?: 'MET' | 'MISSED';
+    sessionId?: string;
+    speakerPersonId?: string;
     capturedVia: Encounter['capturedVia'];
   }): Promise<Encounter>;
   generateDraft(workspaceId: string, personId: string): Promise<FollowUpDraft>;
@@ -130,16 +133,53 @@ class RepositoryBackedFirstSliceService implements FirstSliceService {
     personId: string;
     noteText: string;
     tags: string[];
+    outcome?: 'MET' | 'MISSED';
+    sessionId?: string;
+    speakerPersonId?: string;
     capturedVia: Encounter['capturedVia'];
   }): Promise<Encounter> {
     const workspace = await this.repository.getWorkspaceViewData(params.workspaceId);
+    const person = workspace.persons.find((item) => item.id === params.personId);
     const target = workspace.targets.find((item) => item.personId === params.personId);
     const structured = summarizeEncounter(params.noteText);
+    const selectedSession = params.sessionId
+      ? workspace.sessions.find((item) => item.id === params.sessionId)
+      : undefined;
+    const selectedSpeaker = params.speakerPersonId
+      ? workspace.persons.find((item) => item.id === params.speakerPersonId)
+      : undefined;
+
+    if (!person) {
+      throw new Error(`Person ${params.personId} not found.`);
+    }
+
+    if (params.sessionId && !selectedSession) {
+      throw new Error(`Session ${params.sessionId} not found.`);
+    }
+
+    if (params.speakerPersonId && !selectedSpeaker) {
+      throw new Error(`Speaker ${params.speakerPersonId} not found.`);
+    }
+
+    if (params.speakerPersonId && !params.sessionId) {
+      throw new Error('Speaker context requires a session selection.');
+    }
+
+    if (
+      selectedSession &&
+      selectedSpeaker &&
+      !selectedSession.speakerPersonIds.includes(selectedSpeaker.id)
+    ) {
+      throw new Error('Selected speaker is not attached to the selected session.');
+    }
 
     return this.repository.createEncounter({
       workspaceId: params.workspaceId,
       personId: params.personId,
       targetId: target?.id,
+      outcome: params.outcome ?? (target ? 'MET' : undefined),
+      sessionId: params.sessionId,
+      speakerPersonId: params.speakerPersonId,
       capturedVia: params.capturedVia,
       noteText: params.noteText,
       structuredSummary: structured.summary,

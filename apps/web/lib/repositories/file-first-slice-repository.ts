@@ -309,11 +309,14 @@ class FileFirstSliceRepository implements FirstSliceRepository {
     const store = await readDemoStore();
     getWorkspaceOrThrow(store, input.workspaceId);
 
-    if (input.targetId) {
+    const outcome = input.outcome ?? (input.targetId ? 'MET' : undefined);
+
+    if (input.targetId && outcome) {
       const target = store.targets.find((item) => item.id === input.targetId);
       if (target) {
-        target.status = 'MET';
-        target.metAt = nowIso();
+        target.status = outcome;
+        target.metAt = outcome === 'MET' ? nowIso() : undefined;
+        target.missedAt = outcome === 'MISSED' ? nowIso() : undefined;
         target.updatedAt = nowIso();
       }
     }
@@ -323,6 +326,9 @@ class FileFirstSliceRepository implements FirstSliceRepository {
       workspaceId: input.workspaceId,
       personId: input.personId,
       targetId: input.targetId,
+      outcome,
+      sessionId: input.sessionId,
+      speakerPersonId: input.speakerPersonId,
       capturedVia: input.capturedVia,
       noteText: input.noteText,
       structuredSummary: input.structuredSummary,
@@ -340,6 +346,9 @@ class FileFirstSliceRepository implements FirstSliceRepository {
       entityId: encounter.id,
       metadata: {
         personId: input.personId,
+        outcome: outcome ?? null,
+        sessionId: input.sessionId ?? null,
+        speakerPersonId: input.speakerPersonId ?? null,
         tags: input.tags
       }
     });

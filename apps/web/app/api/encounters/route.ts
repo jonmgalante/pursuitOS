@@ -11,6 +11,9 @@ export async function POST(request: Request) {
   const noteText = String(formData.get('noteText') ?? '');
   const redirectPath = String(formData.get('redirectTo') ?? '/');
   const capturedVia = String(formData.get('capturedVia') ?? 'MANUAL') as Encounter['capturedVia'];
+  const outcome = String(formData.get('outcome') ?? '').trim();
+  const sessionId = String(formData.get('sessionId') ?? '').trim();
+  const speakerPersonId = String(formData.get('speakerPersonId') ?? '').trim();
   const tags = formData.getAll('tags').map((value) => String(value));
 
   await getFirstSliceService().logEncounter({
@@ -18,6 +21,9 @@ export async function POST(request: Request) {
     personId,
     noteText,
     tags,
+    outcome: outcome === 'MET' || outcome === 'MISSED' ? outcome : undefined,
+    sessionId: sessionId || undefined,
+    speakerPersonId: speakerPersonId || undefined,
     capturedVia
   });
 

@@ -95,11 +95,20 @@ function extractBatchPageTextSummary(value: Prisma.JsonValue | null | undefined)
 function extractEncounterSummary(value: Prisma.JsonValue | null | undefined): {
   summary: string;
   nextSteps: string[];
+  outcome?: 'MET' | 'MISSED';
+  sessionId?: string;
+  speakerPersonId?: string;
 } {
   const payload = jsonObject(value);
+  const outcome = payload.outcome;
+  const sessionId = payload.sessionId;
+  const speakerPersonId = payload.speakerPersonId;
   return {
     summary: typeof payload.summary === 'string' ? payload.summary : '',
-    nextSteps: stringArray(payload.nextSteps)
+    nextSteps: stringArray(payload.nextSteps),
+    outcome: outcome === 'MET' || outcome === 'MISSED' ? outcome : undefined,
+    sessionId: typeof sessionId === 'string' ? sessionId : undefined,
+    speakerPersonId: typeof speakerPersonId === 'string' ? speakerPersonId : undefined
   };
 }
 
@@ -811,6 +820,9 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
           workspaceId: encounter.workspaceId,
           personId: encounter.personId,
           targetId: encounter.targetId ?? undefined,
+          outcome: structured.outcome,
+          sessionId: structured.sessionId,
+          speakerPersonId: structured.speakerPersonId,
           capturedVia: encounter.channel,
           noteText: encounter.noteText,
           structuredSummary: structured.summary || encounter.noteText,
@@ -1196,9 +1208,10 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
   async createEncounter(input: CreateEncounterRecordInput): Promise<Encounter> {
     const encounterId = createId('encounter');
     const createdAt = nowIso();
+    const outcome = input.outcome ?? (input.targetId ? 'MET' : undefined);
 
     await this.prisma.$transaction(async (tx) => {
-      if (input.targetId) {
+      if (input.targetId && outcome) {
         const target = await tx.target.findUnique({
           where: {
             id: input.targetId
@@ -1211,8 +1224,9 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
               id: target.id
             },
             data: {
-              status: 'MET',
-              metAt: toDate(createdAt),
+              status: outcome,
+              metAt: outcome === 'MET' ? toDate(createdAt) : null,
+              missedAt: outcome === 'MISSED' ? toDate(createdAt) : null,
               updatedAt: toDate(createdAt)
             }
           });
@@ -1229,7 +1243,10 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
           noteText: input.noteText,
           structuredSummary: {
             summary: input.structuredSummary,
-            nextSteps: input.nextSteps
+            nextSteps: input.nextSteps,
+            ...(outcome ? { outcome } : {}),
+            ...(input.sessionId ? { sessionId: input.sessionId } : {}),
+            ...(input.speakerPersonId ? { speakerPersonId: input.speakerPersonId } : {})
           } as Prisma.InputJsonObject,
           tags: input.tags,
           occurredAt: toDate(createdAt),
@@ -1245,6 +1262,9 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
         entityId: encounterId,
         metadata: {
           personId: input.personId,
+          outcome: outcome ?? null,
+          sessionId: input.sessionId ?? null,
+          speakerPersonId: input.speakerPersonId ?? null,
           tags: input.tags
         }
       });
@@ -1255,6 +1275,9 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
       workspaceId: input.workspaceId,
       personId: input.personId,
       targetId: input.targetId,
+      outcome,
+      sessionId: input.sessionId,
+      speakerPersonId: input.speakerPersonId,
       capturedVia: input.capturedVia,
       noteText: input.noteText,
       structuredSummary: input.structuredSummary,

@@ -1,4 +1,4 @@
-import type { Person, Target, TargetPriority, TargetStatus } from '@copilot/core';
+import type { Encounter, Person, Target, TargetPriority, TargetStatus } from '@copilot/core';
 import { getFirstSliceService } from '../../../lib/services/first-slice-service';
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +25,22 @@ function personNameById(persons: Person[], id: string) {
   return persons.find((person) => person.id === id)?.fullName ?? 'Unknown speaker';
 }
 
+function sessionTitleById(
+  sessions: Array<{ id: string; title: string }>,
+  id?: string
+) {
+  return id ? sessions.find((session) => session.id === id)?.title : undefined;
+}
+
+function encounterOutcome(encounter: Encounter, targets: Target[]): Encounter['outcome'] {
+  if (encounter.outcome) {
+    return encounter.outcome;
+  }
+
+  const target = encounter.targetId ? targets.find((item) => item.id === encounter.targetId) : undefined;
+  return target?.status === 'MET' || target?.status === 'MISSED' ? target.status : undefined;
+}
+
 export default async function WorkspacePage({
   params
 }: {
@@ -32,7 +48,19 @@ export default async function WorkspacePage({
 }) {
   const { workspaceId } = await params;
   const view = await getFirstSliceService().getWorkspaceView(workspaceId);
-  const { workspace, event, persons, companies, targets, encounters, drafts, tasks, captureBatches, auditLogs } =
+  const {
+    workspace,
+    event,
+    persons,
+    companies,
+    sessions,
+    targets,
+    encounters,
+    drafts,
+    tasks,
+    captureBatches,
+    auditLogs
+  } =
     view.workspace;
 
   const groupedTargets: Record<TargetPriority, Target[]> = {
@@ -49,6 +77,9 @@ export default async function WorkspacePage({
           {event.name} · {event.city} · {workspace.portalProvider} · current mode {workspace.mode.toLowerCase()}
         </p>
         <div className="button-row">
+          <a className="button-link" href={`/workspaces/${workspace.id}/field`}>
+            Open field mode
+          </a>
           <a className="button-link secondary" href="/demo/grip/attendees">
             Capture demo attendees
           </a>
@@ -254,6 +285,12 @@ export default async function WorkspacePage({
       <section className="grid two">
         <div className="card">
           <h2>Quick encounter note</h2>
+          <p className="muted small">Need the faster in-event flow? Use dedicated field mode.</p>
+          <div className="button-row" style={{ marginBottom: 12 }}>
+            <a className="button-link secondary" href={`/workspaces/${workspace.id}/field`}>
+              Open field mode
+            </a>
+          </div>
           <form action="/api/encounters" method="post" className="stack">
             <input type="hidden" name="workspaceId" value={workspace.id} />
             <input type="hidden" name="redirectTo" value={`/workspaces/${workspace.id}`} />
@@ -317,10 +354,24 @@ export default async function WorkspacePage({
             ) : (
               encounters.map((encounter) => {
                 const person = persons.find((item) => item.id === encounter.personId);
+                const outcome = encounterOutcome(encounter, targets);
                 return (
                   <div key={encounter.id} className="card">
                     <h3>{person?.fullName ?? 'Unknown person'}</h3>
                     <p>{encounter.noteText}</p>
+                    <div className="pill-list">
+                      {outcome ? (
+                        <span className={outcome === 'MET' ? 'badge success' : 'badge danger'}>
+                          {outcome.toLowerCase()}
+                        </span>
+                      ) : null}
+                      {encounter.sessionId ? (
+                        <span className="pill">session: {sessionTitleById(sessions, encounter.sessionId) ?? 'Unknown session'}</span>
+                      ) : null}
+                      {encounter.speakerPersonId ? (
+                        <span className="pill">speaker: {personNameById(persons, encounter.speakerPersonId)}</span>
+                      ) : null}
+                    </div>
                     <p className="muted small">Summary: {encounter.structuredSummary}</p>
                     <div className="pill-list">
                       {encounter.tags.map((tag) => (

@@ -52,6 +52,9 @@ export async function logEncounter(params: {
   personId: string;
   noteText: string;
   tags: string[];
+  outcome?: 'MET' | 'MISSED';
+  sessionId?: string;
+  speakerPersonId?: string;
   capturedVia: Encounter['capturedVia'];
 }): Promise<Encounter> {
   return firstSliceService.logEncounter(params);
