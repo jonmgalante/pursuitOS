@@ -39,6 +39,9 @@ importers:
       '@copilot/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@copilot/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@copilot/portal-grip':
         specifier: workspace:*
         version: link:../../packages/portal-grip

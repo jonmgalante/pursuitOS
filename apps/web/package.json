@@ -13,6 +13,7 @@
   "dependencies": {
     "@copilot/connectors": "workspace:*",
     "@copilot/core": "workspace:*",
+    "@copilot/db": "workspace:*",
     "@copilot/portal-grip": "workspace:*",
     "next": "^16.0.0",
     "react": "^19.2.0",

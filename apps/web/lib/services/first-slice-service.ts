@@ -17,6 +17,7 @@ import {
   type WorkspaceSummary
 } from '../repositories/first-slice-repository';
 import { createFileFirstSliceRepository } from '../repositories/file-first-slice-repository';
+import { createPrismaFirstSliceRepository } from '../repositories/prisma-first-slice-repository';
 
 export interface WorkspaceView {
   workspace: WorkspaceSummary;
@@ -259,14 +260,37 @@ class RepositoryBackedFirstSliceService implements FirstSliceService {
   }
 }
 
+function configuredFirstSliceBackend(): 'file' | 'prisma' {
+  const value = process.env.COPILOT_FIRST_SLICE_BACKEND?.trim().toLowerCase();
+
+  if (!value || value === 'file') {
+    return 'file';
+  }
+
+  if (value === 'prisma') {
+    return 'prisma';
+  }
+
+  throw new Error(
+    `Unsupported COPILOT_FIRST_SLICE_BACKEND value "${process.env.COPILOT_FIRST_SLICE_BACKEND}". Use "file" or "prisma".`
+  );
+}
+
+function createConfiguredFirstSliceRepository(): FirstSliceRepository {
+  return configuredFirstSliceBackend() === 'prisma'
+    ? createPrismaFirstSliceRepository()
+    : createFileFirstSliceRepository();
+}
+
 export function createFirstSliceService(
   repository: FirstSliceRepository = createFileFirstSliceRepository()
 ): FirstSliceService {
   return new RepositoryBackedFirstSliceService(repository);
 }
 
-const defaultFirstSliceService = createFirstSliceService();
+let defaultFirstSliceService: FirstSliceService | undefined;
 
 export function getFirstSliceService(): FirstSliceService {
+  defaultFirstSliceService ??= createFirstSliceService(createConfiguredFirstSliceRepository());
   return defaultFirstSliceService;
 }

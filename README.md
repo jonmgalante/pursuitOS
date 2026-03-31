@@ -31,17 +31,21 @@ This repository is the locked MVP scaffold for a conference rep copilot:
 - The first slice is demoable now through a file-backed store in `apps/web/lib/store.ts`.
 - The extension captures visible Grip demo pages from the active tab into the web workspace.
 - HubSpot task creation and Gmail draft creation run in mock mode unless you set access tokens in `.env`.
-- The worker and Prisma/Postgres paths are scaffolded and are not required for the current demo flow.
+- The worker path is still scaffold-only.
+- The Prisma/Postgres path is now available as an opt-in first-slice backend; file mode remains the default.
 
 ## Local setup
 
 ```bash
 pnpm install
 cp .env.example .env
+pnpm db:generate
 pnpm check
 ```
 
-`.env` can stay empty for the default demo-first flow. Add `HUBSPOT_ACCESS_TOKEN` or `GMAIL_ACCESS_TOKEN` only if you want live sync instead of deterministic mock behavior. `DATABASE_URL` is only for `packages/db` tooling and is not needed for the local demo.
+`.env` can stay empty for the default demo-first flow. Add `HUBSPOT_ACCESS_TOKEN` or `GMAIL_ACCESS_TOKEN` only if you want live sync instead of deterministic mock behavior.
+
+Set `COPILOT_FIRST_SLICE_BACKEND=prisma` only if you want the optional Postgres-backed repository. `DATABASE_URL` is optional when you use the bundled `docker-compose.yml` defaults and only needs to be set when your local Postgres URL differs.
 
 ## Run the apps
 
@@ -82,6 +86,20 @@ If you are running `pnpm dev:extension`, Chrome will still need an extension rel
 
 The default sync mode is mock. Gmail remains draft-only even when a live token is present.
 
+## Optional Prisma Mode
+
+The web app still defaults to the file-backed repository. To opt into Prisma mode locally:
+
+```bash
+docker compose up -d postgres
+pnpm db:generate
+pnpm --filter @copilot/db prisma db push
+```
+
+Then set `COPILOT_FIRST_SLICE_BACKEND=prisma` in `.env` and start the web app normally with `pnpm dev:web`.
+
+In Prisma mode, first-slice records persist in Postgres, while page HTML artifacts still stay on local disk unless you override `COPILOT_ARTIFACTS_DIR`.
+
 ## Baseline validation
 
 ```bash
@@ -89,6 +107,7 @@ pnpm check
 ```
 
 `pnpm check` runs the current baseline validations only: `pnpm typecheck` and `pnpm build`.
+Run `pnpm db:generate` first so the generated Prisma client is present for workspace typecheck/build.
 
 ## Automated smoke harness
 

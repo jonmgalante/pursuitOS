@@ -4,17 +4,34 @@
 
 1. Run `pnpm install`.
 2. Copy `.env.example` to `.env`.
-3. Run `pnpm check` to confirm the baseline build and typecheck pass.
-4. Start the web app with `pnpm dev:web`.
-5. Run `pnpm dev:worker` only if you want to inspect the current worker scaffold output. It prints placeholder jobs and exits.
-6. Run `pnpm dev:extension` for watch mode, or `pnpm --filter @copilot/extension build` for a one-off build.
+3. Run `pnpm db:generate`.
+4. Run `pnpm check` to confirm the baseline build and typecheck pass.
+5. Start the web app with `pnpm dev:web`.
+6. Run `pnpm dev:worker` only if you want to inspect the current worker scaffold output. It prints placeholder jobs and exits.
+7. Run `pnpm dev:extension` for watch mode, or `pnpm --filter @copilot/extension build` for a one-off build.
 
 ## Expected Environment Variables
 
 - None are required for the default demo-first file-backed flow.
 - `HUBSPOT_ACCESS_TOKEN` enables live HubSpot task creation instead of mock mode.
 - `GMAIL_ACCESS_TOKEN` enables live Gmail draft creation instead of mock mode.
-- `DATABASE_URL` is only for `packages/db` Prisma tooling and is not part of the current web demo flow.
+- `COPILOT_FIRST_SLICE_BACKEND=prisma` opts the web app into the Prisma-backed first-slice repository. Leave it unset for the default file-backed flow.
+- `DATABASE_URL` is optional if you use the bundled `docker-compose.yml` Postgres defaults. It is required only when your local Postgres URL differs from `postgresql://copilot:copilot@localhost:5432/conference_copilot`.
+
+## Optional Local Postgres For Prisma Mode
+
+File mode remains the default and is what the smoke harness uses.
+
+If you want to verify the Prisma-backed path locally:
+
+1. Start Postgres with `docker compose up -d postgres`.
+2. Set `COPILOT_FIRST_SLICE_BACKEND=prisma` in `.env`.
+3. Set `DATABASE_URL` only if you are not using the bundled Postgres defaults.
+4. Run `pnpm db:generate`.
+5. Run `pnpm --filter @copilot/db prisma db push`.
+6. Start the web app with `pnpm dev:web`.
+
+In Prisma mode, page HTML artifacts still stay on local disk in `apps/web/.artifacts` unless you override `COPILOT_ARTIFACTS_DIR`, while the database stores the artifact metadata and references.
 
 ## Loading the Chrome Extension
 
@@ -57,6 +74,7 @@ If the smoke command fails, treat it as a broken first-slice path. The output te
 - If the web app shows an empty workspace, seed the demo workspace again from the home page or `POST /api/demo/seed`.
 - If extension code changes do not appear in Chrome, wait for the watch rebuild to finish and then reload the extension in `chrome://extensions`.
 - If HubSpot or Gmail calls fail in live mode, remove the access token to fall back to deterministic mock behavior while debugging.
+- If Prisma mode fails to boot, confirm Postgres is running, `pnpm db:generate` has completed, and `pnpm --filter @copilot/db prisma db push` has been applied to the target database.
 
 ## Do Not Commit Generated Artifacts
 
