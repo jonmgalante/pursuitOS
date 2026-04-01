@@ -16,6 +16,12 @@ const lastCaptureSummaryEl = document.querySelector<HTMLDivElement>('#lastCaptur
 const saveButton = document.querySelector<HTMLButtonElement>('#saveSettings');
 const openWorkspaceButton = document.querySelector<HTMLButtonElement>('#openWorkspace');
 const captureButton = document.querySelector<HTMLButtonElement>('#capture');
+const statusLabelByKind: Record<'idle' | 'loading' | 'success' | 'error', string> = {
+  idle: 'Ready',
+  loading: 'Working',
+  success: 'Success',
+  error: 'Error'
+};
 
 function createSummaryRow(
   label: string,
@@ -51,9 +57,9 @@ function createSummaryRow(
 
 function setStatus(kind: 'idle' | 'loading' | 'success' | 'error', text: string) {
   if (statusEl) {
-    statusEl.textContent = text;
+    statusEl.textContent = `${statusLabelByKind[kind]}\n${text}`;
     statusEl.dataset.state = kind;
-    statusEl.setAttribute('aria-label', text.replaceAll('\n', ' '));
+    statusEl.setAttribute('aria-label', `${statusLabelByKind[kind]} ${text}`.replaceAll('\n', ' '));
   }
 }
 
@@ -61,6 +67,7 @@ function setBusy(isBusy: boolean) {
   if (captureButton) {
     captureButton.disabled = isBusy;
     captureButton.textContent = isBusy ? 'Capturing...' : 'Capture current page';
+    captureButton.setAttribute('aria-busy', isBusy ? 'true' : 'false');
   }
 }
 
@@ -152,4 +159,5 @@ captureButton?.addEventListener('click', () => {
   void captureCurrentPage();
 });
 
+setStatus('idle', 'Open a visible attendee or session page to capture.');
 void loadSettings();

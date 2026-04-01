@@ -48,6 +48,14 @@ The semantic layer lives in [`apps/web/app/pursuit-theme.css`](/Users/jongalante
 
 Status surfaces and borders are exposed as helper tokens so buttons, badges, and banners can use the same semantic family without introducing new raw color values.
 
+Additional helper tokens now cover shared shell structure and interaction polish:
+
+- shell backdrop, panel gradients, shell borders, and muted shell surfaces
+- interactive hover surfaces for cards and selection controls
+- insight glow and insight-card surfaces for session intelligence only
+- signal shadows for CTA, success, missed, and insight buttons
+- floating shell surfaces for sticky action bars
+
 ## Usage ratios
 
 - Keep neutrals at roughly `70–75%` of the interface.
@@ -65,6 +73,8 @@ Orange is a signal, not a canvas. Aqua is supportive, never the primary CTA.
 
 Status UI must always pair color with text and, where practical, an icon or marker. The shared badge pattern includes a dot plus a label so state is never color-only.
 
+Focus must also be visible on primary controls, route cards, inline links, and extension links. The shared focus treatment uses the orange-derived ring token rather than browser-default blues that fight the PursuitOS palette.
+
 ## Guardrails
 
 Never let orange become the background. Use it on buttons, pills, focused segments, or small signal surfaces only.
@@ -76,3 +86,5 @@ Do use Sand and raised-surface neutrals for the working canvas so dense operatio
 Do not turn every accent into a CTA. If a surface is informational or analytical, prefer Aqua or neutral structure over Orange.
 
 Do not use raw palette hex values directly in product screens when a semantic token already exists. Extend the shared token file first, then consume the semantic role.
+
+Intentional exception: `/demo/grip` fixture chrome may keep a small amount of isolated surface styling so the smoke fixtures remain stable and clearly separate from app-owned product UI. Those exceptions should stay minimal and documented.

@@ -293,7 +293,7 @@ export default async function WorkspaceFieldModePage({
 
         <div className="field-activity-feed">
           {recentActivity.length === 0 ? (
-            <p className="muted">No encounter activity yet.</p>
+            <div className="empty-state">No encounter activity yet.</div>
           ) : (
             recentActivity.map((encounter) => {
               const person = persons.find((item) => item.id === encounter.personId);

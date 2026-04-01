@@ -67,17 +67,50 @@
 
   /* Surface helpers */
   --surface-code: var(--raw-code);
+  --surface-card-gradient: linear-gradient(180deg, rgba(var(--raw-sand-raised-rgb), 0.82), var(--surface-main));
+  --surface-interactive-hover: #ede6db;
+  --surface-interactive-active: #e6ddd1;
   --empty-state-surface: #f0e9de;
   --insight-surface: #d7f7fb;
   --insight-border: #8fdce7;
+  --insight-glow: radial-gradient(circle, rgba(var(--raw-aqua-rgb), 0.18), transparent 68%);
+  --insight-card-surface: linear-gradient(180deg, rgba(var(--raw-aqua-rgb), 0.12), var(--raised-surface));
   --status-success-surface: #d9f6e2;
   --status-success-border: #7ad59f;
   --status-missed-surface: #fde7bb;
   --status-missed-border: #e8ba59;
   --status-follow-up-surface: #fed8bd;
   --status-follow-up-border: #fb9a54;
+  --status-must-meet-surface: rgba(var(--raw-orange-rgb), 0.12);
+  --status-follow-up-pill-surface: rgba(var(--raw-orange-rgb), 0.08);
   --status-neutral-surface: #e4e7eb;
   --status-neutral-border: #bcc3cb;
+  --insight-pill-surface: rgba(var(--raw-aqua-rgb), 0.2);
+  --shell-app-background:
+    radial-gradient(circle at top, rgba(var(--raw-steel-rgb), 0.92), transparent 38%),
+    linear-gradient(180deg, rgba(var(--raw-steel-rgb), 0.35), transparent 24%),
+    var(--shell-background);
+  --shell-panel-gradient: linear-gradient(180deg, rgba(var(--raw-steel-rgb), 0.96), rgba(var(--raw-midnight-rgb), 0.98));
+  --shell-border-subtle: rgba(var(--raw-sand-rgb), 0.12);
+  --shell-border-strong: rgba(var(--raw-sand-rgb), 0.16);
+  --shell-surface-muted: rgba(var(--raw-sand-rgb), 0.08);
+  --shell-surface-hover: rgba(var(--raw-sand-rgb), 0.12);
+  --shell-surface-strong: rgba(var(--raw-sand-rgb), 0.14);
+  --secondary-control-border: rgba(var(--raw-steel-rgb), 0.3);
+  --secondary-control-border-hover: rgba(var(--raw-steel-rgb), 0.45);
+  --secondary-control-surface: rgba(var(--raw-sand-raised-rgb), 0.92);
+  --signal-border-primary: rgba(var(--raw-orange-rgb), 0.4);
+  --input-inset-highlight: inset 0 1px 0 rgba(var(--raw-sand-rgb), 0.7);
+  --table-row-hover: rgba(var(--raw-steel-rgb), 0.05);
+  --signal-shadow-primary: 0 10px 18px rgba(var(--raw-orange-rgb), 0.16);
+  --signal-shadow-success: 0 10px 18px rgba(var(--raw-met-rgb), 0.18);
+  --signal-shadow-follow-up: 0 10px 18px rgba(var(--raw-follow-up-rgb), 0.18);
+  --signal-shadow-missed: 0 10px 18px rgba(var(--raw-missed-rgb), 0.18);
+  --signal-shadow-insight: 0 10px 18px rgba(var(--raw-aqua-rgb), 0.18);
+  --focus-shadow: 0 0 0 3px var(--focus-ring), var(--shadow-raised);
+  --floating-shell-border: rgba(var(--raw-sand-rgb), 0.14);
+  --floating-shell-surface: rgba(var(--raw-steel-rgb), 0.96);
+  --demo-toolbar-surface: rgba(var(--raw-sand-rgb), 0.9);
 
   /* Typography */
   --font-ui: "Avenir Next", "Segoe UI", sans-serif;
@@ -120,10 +153,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(var(--raw-steel-rgb), 0.92), transparent 38%),
-    linear-gradient(180deg, rgba(var(--raw-steel-rgb), 0.35), transparent 24%),
-    var(--shell-background);
+  background: var(--shell-app-background);
   color: var(--primary-text);
   font-family: var(--font-ui);
   line-height: var(--line-height-copy);
@@ -275,6 +305,12 @@ pre {
   color: var(--primary-text);
 }
 
+.inline-link:focus-visible {
+  outline: 2px solid var(--status-follow-up-border);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
 .grid {
   display: grid;
   gap: var(--space-5);
@@ -306,7 +342,7 @@ pre {
 .card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(var(--raw-sand-raised-rgb), 0.82), var(--main-surface));
+  background: var(--surface-card-gradient);
   border: var(--border-width) solid var(--subtle-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -319,8 +355,8 @@ pre {
 }
 
 .shell-panel-card {
-  background: linear-gradient(180deg, rgba(var(--raw-steel-rgb), 0.96), rgba(var(--raw-midnight-rgb), 0.98));
-  border-color: rgba(var(--raw-sand-rgb), 0.12);
+  background: var(--shell-panel-gradient);
+  border-color: var(--shell-border-subtle);
   color: var(--shell-text);
   box-shadow: var(--shadow-floating);
 }
@@ -347,7 +383,7 @@ pre {
   border-radius: var(--radius-pill);
   background: var(--primary-cta);
   color: var(--primary-cta-foreground);
-  box-shadow: 0 10px 18px rgba(var(--raw-orange-rgb), 0.16);
+  box-shadow: var(--signal-shadow-primary);
   cursor: pointer;
   font: inherit;
   font-size: 0.9rem;
@@ -365,12 +401,19 @@ pre {
   transform: translateY(-1px);
 }
 
+:where(button, .button-link):active:not(:disabled) {
+  transform: translateY(0);
+}
+
 :where(button, .button-link):focus-visible,
 :where(input, select, textarea):focus-visible {
   outline: none;
-  box-shadow:
-    0 0 0 3px var(--focus-ring),
-    var(--shadow-raised);
+  box-shadow: var(--focus-shadow);
+}
+
+:where(.app-route-link, .summary-link):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-shadow);
 }
 
 :where(button, .button-link):disabled {
@@ -384,53 +427,53 @@ pre {
 }
 
 :where(button, .button-link).secondary {
-  border-color: rgba(var(--raw-steel-rgb), 0.3);
-  background: rgba(var(--raw-sand-raised-rgb), 0.92);
+  border-color: var(--secondary-control-border);
+  background: var(--secondary-control-surface);
   box-shadow: none;
   color: var(--primary-text);
 }
 
 :where(button, .button-link).secondary:hover:not(:disabled) {
-  border-color: rgba(var(--raw-steel-rgb), 0.45);
-  background: var(--raised-surface);
+  border-color: var(--secondary-control-border-hover);
+  background: var(--surface-interactive-hover);
 }
 
 :where(button, .button-link).shell {
-  border-color: rgba(var(--raw-sand-rgb), 0.14);
-  background: rgba(var(--raw-sand-rgb), 0.08);
+  border-color: var(--shell-surface-strong);
+  background: var(--shell-surface-muted);
   box-shadow: none;
   color: var(--shell-text);
 }
 
 :where(button, .button-link).shell:hover:not(:disabled) {
-  background: rgba(var(--raw-sand-rgb), 0.14);
+  background: var(--shell-surface-strong);
 }
 
 :where(button, .button-link).success {
   border-color: var(--status-success);
   background: var(--status-success);
-  box-shadow: 0 10px 18px rgba(var(--raw-met-rgb), 0.18);
+  box-shadow: var(--signal-shadow-success);
   color: var(--status-foreground);
 }
 
 :where(button, .button-link).warning {
   border-color: var(--status-follow-up);
   background: var(--status-follow-up);
-  box-shadow: 0 10px 18px rgba(var(--raw-follow-up-rgb), 0.18);
+  box-shadow: var(--signal-shadow-follow-up);
   color: var(--status-foreground);
 }
 
 :where(button, .button-link).danger {
   border-color: var(--status-missed);
   background: var(--status-missed);
-  box-shadow: 0 10px 18px rgba(var(--raw-missed-rgb), 0.18);
+  box-shadow: var(--signal-shadow-missed);
   color: var(--status-foreground);
 }
 
 :where(button, .button-link).insight {
   border-color: var(--secondary-insight-accent);
   background: var(--secondary-insight-accent);
-  box-shadow: 0 10px 18px rgba(var(--raw-aqua-rgb), 0.18);
+  box-shadow: var(--signal-shadow-insight);
   color: var(--secondary-insight-foreground);
 }
 
@@ -454,13 +497,14 @@ input[type='search'],
 select,
 textarea {
   width: 100%;
+  min-height: 2.95rem;
   border: var(--border-width) solid var(--subtle-border);
   border-radius: var(--radius-md);
   background: var(--raised-surface);
   color: var(--primary-text);
   padding: 0.8rem 0.9rem;
   font: inherit;
-  box-shadow: inset 0 1px 0 rgba(var(--raw-sand-rgb), 0.7);
+  box-shadow: var(--input-inset-highlight);
   transition:
     border-color 120ms ease,
     background-color 120ms ease,
@@ -515,7 +559,7 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: rgba(var(--raw-steel-rgb), 0.05);
+  background: var(--table-row-hover);
 }
 
 .pill,
@@ -535,8 +579,8 @@ tbody tr:hover {
 }
 
 .badge.shell {
-  border-color: rgba(var(--raw-sand-rgb), 0.12);
-  background: rgba(var(--raw-sand-rgb), 0.08);
+  border-color: var(--shell-border-subtle);
+  background: var(--shell-surface-muted);
   color: var(--shell-text);
 }
 
@@ -584,25 +628,25 @@ tbody tr:hover {
 
 .badge.must-meet {
   border-color: var(--status-follow-up-border);
-  background: rgba(var(--raw-orange-rgb), 0.12);
+  background: var(--status-must-meet-surface);
   color: var(--primary-text);
 }
 
 .pill.must-meet {
   border-color: var(--status-follow-up-border);
-  background: rgba(var(--raw-orange-rgb), 0.08);
+  background: var(--status-follow-up-pill-surface);
   color: var(--primary-text);
 }
 
 .pill.follow-up {
   border-color: var(--status-follow-up-border);
-  background: rgba(var(--raw-orange-rgb), 0.08);
+  background: var(--status-follow-up-pill-surface);
   color: var(--primary-text);
 }
 
 .pill.insight {
   border-color: var(--insight-border);
-  background: rgba(var(--raw-aqua-rgb), 0.2);
+  background: var(--insight-pill-surface);
   color: var(--secondary-insight-foreground);
 }
 

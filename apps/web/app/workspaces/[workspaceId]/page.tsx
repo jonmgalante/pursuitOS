@@ -357,7 +357,7 @@ export default async function WorkspacePage({
 
                   <div className="stack">
                     {groupedTargets[priority].length === 0 ? (
-                      <p className="muted">No Targets in this lane yet.</p>
+                      <div className="empty-state">No Targets in this lane yet.</div>
                     ) : (
                       groupedTargets[priority].map((target) => {
                         const person = persons.find((item) => item.id === target.personId);
@@ -407,7 +407,7 @@ export default async function WorkspacePage({
                                 <input type="hidden" name="status" value="TARGETED" />
                                 <input type="hidden" name="redirectTo" value={`/workspaces/${workspace.id}`} />
                                 <button type="submit" className="secondary">
-                                  targeted
+                                  Targeted
                                 </button>
                               </form>
                               <form className="inline" action="/api/targets" method="post">
@@ -417,7 +417,7 @@ export default async function WorkspacePage({
                                 <input type="hidden" name="status" value="MET" />
                                 <input type="hidden" name="redirectTo" value={`/workspaces/${workspace.id}`} />
                                 <button type="submit" className="success">
-                                  met
+                                  Met
                                 </button>
                               </form>
                               <form className="inline" action="/api/targets" method="post">
@@ -427,7 +427,7 @@ export default async function WorkspacePage({
                                 <input type="hidden" name="status" value="MISSED" />
                                 <input type="hidden" name="redirectTo" value={`/workspaces/${workspace.id}`} />
                                 <button type="submit" className="danger">
-                                  missed
+                                  Missed
                                 </button>
                               </form>
                             </div>
@@ -438,7 +438,7 @@ export default async function WorkspacePage({
                                 <input type="hidden" name="personId" value={person.id} />
                                 <input type="hidden" name="redirectTo" value={`/workspaces/${workspace.id}`} />
                                 <button type="submit" className="secondary">
-                                  generate draft
+                                  Generate draft
                                 </button>
                               </form>
                               <form className="inline" action="/api/sync/hubspot/task" method="post">
@@ -503,7 +503,7 @@ export default async function WorkspacePage({
                           {person.hubspotContactId ? (
                             <span className="badge success">{person.matchMethod.toLowerCase()}</span>
                           ) : (
-                            <span className="badge no-action">No action</span>
+                            <span className="badge no-action">No deterministic match</span>
                           )}
                         </td>
                         <td>
@@ -602,8 +602,8 @@ export default async function WorkspacePage({
                   <div>
                     <label htmlFor="capturedVia">Captured via</label>
                     <select id="capturedVia" name="capturedVia" defaultValue="MANUAL">
-                      <option value="MANUAL">manual</option>
-                      <option value="VOICE">voice</option>
+                      <option value="MANUAL">Manual</option>
+                      <option value="VOICE">Voice</option>
                     </select>
                   </div>
 
@@ -613,7 +613,7 @@ export default async function WorkspacePage({
 
               <div className="workspace-feed">
                 {recentEncounterFeed.length === 0 ? (
-                  <p className="muted">No encounter notes yet.</p>
+                  <div className="empty-state">No encounter notes yet.</div>
                 ) : (
                   recentEncounterFeed.map((encounter) => {
                     const person = persons.find((item) => item.id === encounter.personId);
@@ -710,7 +710,7 @@ export default async function WorkspacePage({
 
             <div className="capture-batch-list">
               {sortedCaptureBatches.length === 0 ? (
-                <p className="muted">No capture batches yet. Use the extension on the demo Grip pages.</p>
+                <div className="empty-state">No capture batches yet. Use the extension on the demo Grip pages.</div>
               ) : (
                 sortedCaptureBatches.map((batch) => (
                   <div key={batch.id} className="capture-batch-card">
@@ -742,7 +742,7 @@ export default async function WorkspacePage({
 
             <div className="session-stack">
               {view.rankedSessions.length === 0 ? (
-                <p className="muted">Capture the sessions demo page to populate session intelligence.</p>
+                <div className="empty-state">Capture the sessions demo page to populate session intelligence.</div>
               ) : (
                 view.rankedSessions.map((session) => (
                   <div key={session.id} className="session-card">
@@ -802,7 +802,7 @@ export default async function WorkspacePage({
                 </div>
 
                 {nextActionItems.length === 0 ? (
-                  <p className="muted">No open follow-up actions yet.</p>
+                  <div className="empty-state">No open follow-up actions yet.</div>
                 ) : (
                   nextActionItems.map((item) => (
                     <div key={item.target.id} className="queue-card needs-follow-up">
@@ -882,7 +882,7 @@ export default async function WorkspacePage({
                 </div>
 
                 {drafts.length === 0 ? (
-                  <p className="muted">Generate a draft from an encounter to populate this queue.</p>
+                  <div className="empty-state">Generate a draft from an encounter to populate this queue.</div>
                 ) : (
                   drafts.map((draft) => {
                     const person = persons.find((item) => item.id === draft.personId);
@@ -934,7 +934,7 @@ export default async function WorkspacePage({
                 </div>
 
                 {tasks.length === 0 ? (
-                  <p className="muted">No HubSpot tasks synced yet.</p>
+                  <div className="empty-state">No HubSpot tasks synced yet.</div>
                 ) : (
                   tasks.map((task) => {
                     const person = persons.find((item) => item.id === task.personId);
@@ -986,7 +986,7 @@ export default async function WorkspacePage({
 
             <div className="compact-feed">
               {recentAuditEntries.length === 0 ? (
-                <p className="muted">No audit entries yet.</p>
+                <div className="empty-state">No audit entries yet.</div>
               ) : (
                 recentAuditEntries.map((entry) => (
                   <div key={entry.id} className="compact-feed-row">

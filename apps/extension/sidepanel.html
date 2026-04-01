@@ -15,6 +15,11 @@
         gap: var(--space-4);
       }
 
+      .panel-section {
+        display: grid;
+        gap: var(--space-3);
+      }
+
       .card {
         margin-bottom: 0;
       }
@@ -29,22 +34,40 @@
       }
 
       .panel-section input {
-        margin-bottom: var(--space-3);
+        min-height: 3rem;
+        margin-bottom: 0;
       }
 
       .button-row {
-        margin-top: var(--space-4);
+        display: grid;
+        gap: var(--space-2);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 0;
+      }
+
+      .button-row > * {
+        width: 100%;
+      }
+
+      .capture-actions {
+        grid-template-columns: 1fr;
       }
 
       button:disabled {
         cursor: progress;
       }
 
+      #capture {
+        width: 100%;
+      }
+
       .status {
         display: grid;
         gap: var(--space-2);
+        min-height: 5rem;
+        align-content: start;
         white-space: pre-wrap;
-        margin-top: var(--space-4);
+        margin-top: 0;
         padding: var(--space-4);
         border: var(--border-width) solid var(--subtle-border);
         border-radius: var(--radius-md);
@@ -159,7 +182,7 @@
           Open a visible attendee or session page and press capture. The extension injects the
           content script only into the active tab.
         </p>
-        <div class="button-row">
+        <div class="button-row capture-actions">
           <button id="capture">Capture current page</button>
         </div>
         <div id="status" class="status" data-state="idle" role="status" aria-live="polite">Ready.</div>
