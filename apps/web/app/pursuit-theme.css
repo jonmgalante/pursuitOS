@@ -555,19 +555,22 @@ tbody tr:hover {
   color: var(--status-foreground);
 }
 
-.badge.warning {
+.badge.warning,
+.badge.follow-up {
   border-color: var(--status-follow-up-border);
   background: var(--status-follow-up-surface);
   color: var(--status-foreground);
 }
 
-.badge.danger {
+.badge.danger,
+.badge.missed {
   border-color: var(--status-missed-border);
   background: var(--status-missed-surface);
   color: var(--status-foreground);
 }
 
-.badge.neutral {
+.badge.neutral,
+.badge.no-action {
   border-color: var(--status-neutral-border);
   background: var(--status-neutral-surface);
   color: var(--secondary-text);
@@ -576,6 +579,30 @@ tbody tr:hover {
 .badge.insight {
   border-color: var(--insight-border);
   background: var(--insight-surface);
+  color: var(--secondary-insight-foreground);
+}
+
+.badge.must-meet {
+  border-color: var(--status-follow-up-border);
+  background: rgba(var(--raw-orange-rgb), 0.12);
+  color: var(--primary-text);
+}
+
+.pill.must-meet {
+  border-color: var(--status-follow-up-border);
+  background: rgba(var(--raw-orange-rgb), 0.08);
+  color: var(--primary-text);
+}
+
+.pill.follow-up {
+  border-color: var(--status-follow-up-border);
+  background: rgba(var(--raw-orange-rgb), 0.08);
+  color: var(--primary-text);
+}
+
+.pill.insight {
+  border-color: var(--insight-border);
+  background: rgba(var(--raw-aqua-rgb), 0.2);
   color: var(--secondary-insight-foreground);
 }
 

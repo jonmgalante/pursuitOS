@@ -6,85 +6,157 @@ export default async function HomePage() {
   const service = getFirstSliceService();
   await service.ensureDemoWorkspace();
   const workspaces = await service.listWorkspaces();
+  const featuredWorkspace = workspaces[0];
+  const featuredView = featuredWorkspace
+    ? await service.getWorkspaceView(featuredWorkspace.id)
+    : undefined;
+
   const workspaceCount = workspaces.length;
+  const featuredTargets = featuredView?.workspace.targets ?? [];
+  const featuredTargetCount = featuredTargets.length;
+  const featuredMustMeetCount = featuredTargets.filter((target) => target.priority === 'MUST_MEET').length;
+  const featuredSessionCount = featuredView?.rankedSessions.length ?? 0;
+  const featuredTopSession = featuredView?.rankedSessions[0];
+  const featuredEncounterCount = featuredView?.workspace.encounters.length ?? 0;
+  const featuredDraftCount = featuredView?.workspace.drafts.length ?? 0;
+  const featuredPendingDraftCount =
+    featuredView?.workspace.drafts.filter((draft) => !draft.gmailDraftId).length ?? 0;
+  const featuredNeedsFollowUpCount =
+    featuredTargets.filter((target) => target.status === 'MET' || target.status === 'MISSED').length ?? 0;
 
   return (
     <div className="home-page grid">
       <section className="card home-hero">
         <div className="home-hero-copy">
           <p className="section-eyebrow">Mission control</p>
-          <h2>Capture visible Grip context, rank Targets, and move follow-up before the conference floor shifts.</h2>
+          <h2>Run the rep workspace from visible capture to Target follow-up without leaving the locked MVP path.</h2>
           <p className="lead">
-            A rep can capture visible Grip attendee and session data into one workspace, mark
-            Targets, log encounters, generate follow-up drafts, and sync a HubSpot task plus Gmail
-            draft without leaving the locked MVP path.
+            Use the Grip capture companion to bring visible attendee and session data into one
+            workspace, decide who matters, record what happened, and move the next HubSpot and
+            Gmail actions fast.
           </p>
 
           <div className="button-row">
             <form action="/api/demo/seed" method="post">
               <button type="submit">Create or open demo workspace</button>
             </form>
+            {featuredWorkspace ? (
+              <a className="button-link secondary" href={`/workspaces/${featuredWorkspace.id}`}>
+                Open workspace
+              </a>
+            ) : null}
             <a className="button-link secondary" href="/demo/grip/attendees">
               Open demo attendee page
             </a>
             <a className="button-link secondary" href="/demo/grip/sessions">
               Open demo session page
             </a>
-            <a className="button-link secondary" href="/demo/grip/attendees/avery-chen">
-              Open attendee profile page
-            </a>
           </div>
 
           <div className="pill-list">
             <span className="badge neutral">Visible-record capture only</span>
             <span className="badge insight">Session intelligence ready</span>
-            <span className="badge warning">Follow-up path preserved</span>
+            <span className="badge follow-up">Follow-up path preserved</span>
           </div>
         </div>
 
-        <aside className="home-hero-rail">
-          <p className="section-eyebrow shell">Operating loop</p>
-          <div className="home-command-list">
-            <div className="home-command-row">
-              <span className="home-command-index">01</span>
-              <div>
-                <strong>Capture visible attendees and sessions</strong>
-                <p className="muted">Use the extension inside the active logged-in Grip tab.</p>
-              </div>
+        <aside className="home-command-board shell-panel-card">
+          <div className="section-header compact section-header-shell">
+            <div className="section-title-stack">
+              <p className="section-eyebrow shell">Operator snapshot</p>
+              <h2>Five questions, one workspace</h2>
             </div>
-            <div className="home-command-row">
-              <span className="home-command-index">02</span>
-              <div>
-                <strong>Turn people into Targets</strong>
-                <p className="muted">Promote the must-meet list before the event gets noisy.</p>
-              </div>
+            {featuredWorkspace ? (
+              <span className="badge shell">{featuredWorkspace.name}</span>
+            ) : null}
+          </div>
+
+          <div className="question-strip home-question-strip">
+            <div className="question-card shell action">
+              <p className="question-label">Who should I meet?</p>
+              <p className="question-value">
+                {featuredMustMeetCount > 0 ? `${featuredMustMeetCount} must meet` : 'Build the Target list'}
+              </p>
+              <p className="question-detail">
+                {featuredTargetCount > 0
+                  ? `${featuredTargetCount} total Targets are already in the workspace.`
+                  : 'Mark captured people as must meet, nice to meet, or backup.'}
+              </p>
             </div>
-            <div className="home-command-row">
-              <span className="home-command-index">03</span>
-              <div>
-                <strong>Log encounters and draft follow-up</strong>
-                <p className="muted">Keep the HubSpot and Gmail draft path intact from the same workspace.</p>
-              </div>
+
+            <div className="question-card shell insight">
+              <p className="question-label">Where should I go?</p>
+              <p className="question-value">
+                {featuredTopSession ? featuredTopSession.title : 'Capture sessions to rank next stops'}
+              </p>
+              <p className="question-detail">
+                {featuredSessionCount > 0
+                  ? `${featuredSessionCount} ranked sessions are ready for session intelligence.`
+                  : 'Open the demo sessions fixture to populate speaker and session recommendations.'}
+              </p>
+            </div>
+
+            <div className="question-card shell neutral">
+              <p className="question-label">What just happened?</p>
+              <p className="question-value">
+                {featuredEncounterCount > 0
+                  ? `${featuredEncounterCount} encounter${featuredEncounterCount === 1 ? '' : 's'} logged`
+                  : 'No encounters recorded yet'}
+              </p>
+              <p className="question-detail">
+                Field mode and the workspace note flow preserve in-event activity for follow-up.
+              </p>
+            </div>
+
+            <div className="question-card shell action">
+              <p className="question-label">What should I do next?</p>
+              <p className="question-value">
+                {featuredNeedsFollowUpCount > 0
+                  ? `${featuredNeedsFollowUpCount} Targets need follow-up`
+                  : 'No open follow-up queue yet'}
+              </p>
+              <p className="question-detail">
+                Met and missed Targets become the next-action queue for drafts and HubSpot tasks.
+              </p>
+            </div>
+
+            <div className="question-card shell action">
+              <p className="question-label">What should I send?</p>
+              <p className="question-value">
+                {featuredDraftCount > 0
+                  ? `${featuredDraftCount} draft${featuredDraftCount === 1 ? '' : 's'} ready`
+                  : 'No draft queue yet'}
+              </p>
+              <p className="question-detail">
+                {featuredPendingDraftCount > 0
+                  ? `${featuredPendingDraftCount} Gmail draft${featuredPendingDraftCount === 1 ? '' : 's'} still need sync.`
+                  : 'Generate a draft from an encounter to populate the send queue.'}
+              </p>
             </div>
           </div>
         </aside>
       </section>
 
-      <section className="grid three home-kpi-grid">
-        <div className="card home-kpi-card">
-          <p className="section-eyebrow">Attendees</p>
-          <p className="kpi">10</p>
-          <p className="kpi-label">Visible attendee records on the attendee capture page</p>
-        </div>
-        <div className="card home-kpi-card">
-          <p className="section-eyebrow">Sessions</p>
-          <p className="kpi">15</p>
-          <p className="kpi-label">Session and speaker records on the sessions capture page</p>
-        </div>
+      <section className="home-kpi-strip">
         <div className="card home-kpi-card">
           <p className="section-eyebrow">Capture floor</p>
           <p className="kpi">25</p>
-          <p className="kpi-label">Visible records across both Grip demo pages</p>
+          <p className="kpi-label">Visible records across the attendee and session fixtures</p>
+        </div>
+        <div className="card home-kpi-card">
+          <p className="section-eyebrow">Attendee fixture</p>
+          <p className="kpi">10</p>
+          <p className="kpi-label">Visible attendee records on the demo attendee page</p>
+        </div>
+        <div className="card home-kpi-card">
+          <p className="section-eyebrow">Session fixture</p>
+          <p className="kpi">15</p>
+          <p className="kpi-label">Session and speaker records on the demo session page</p>
+        </div>
+        <div className="card home-kpi-card">
+          <p className="section-eyebrow">Workspaces</p>
+          <p className="kpi">{workspaceCount}</p>
+          <p className="kpi-label">Command surfaces available in the current environment</p>
         </div>
       </section>
 
@@ -94,6 +166,7 @@ export default async function HomePage() {
             <div className="section-title-stack">
               <p className="section-eyebrow">Runbook</p>
               <h2>How to run the first slice</h2>
+              <p className="muted">Keep the rep flow intact from capture to draft and sync.</p>
             </div>
             <a className="inline-link" href="/demo/grip/attendees">
               Open first capture fixture
@@ -124,7 +197,7 @@ export default async function HomePage() {
             </li>
             <li className="step-row">
               <span className="step-index">05</span>
-              <p>Back in the workspace, mark three Targets, log one encounter, generate one draft, and sync.</p>
+              <p>Mark three Targets, log one encounter, generate one draft, and sync the next actions.</p>
             </li>
           </ol>
         </section>
@@ -132,8 +205,9 @@ export default async function HomePage() {
         <section className="card">
           <div className="section-header">
             <div className="section-title-stack">
-              <p className="section-eyebrow">Workspaces</p>
-              <h2>Available command surfaces</h2>
+              <p className="section-eyebrow">Command surfaces</p>
+              <h2>Available workspaces</h2>
+              <p className="muted">Open the current operator surface or move back into the demo fixtures.</p>
             </div>
             <span className="badge neutral">
               {workspaceCount} {workspaceCount === 1 ? 'workspace' : 'workspaces'}
