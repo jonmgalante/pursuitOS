@@ -58,7 +58,7 @@ function encounterOutcome(encounter: Encounter, targets: Target[]): Encounter['o
 }
 
 function statusBadge(status: 'MET' | 'MISSED') {
-  return <span className={status === 'MET' ? 'badge success' : 'badge danger'}>{status.toLowerCase()}</span>;
+  return <span className={status === 'MET' ? 'badge success' : 'badge danger'}>{status === 'MET' ? 'Met' : 'Missed'}</span>;
 }
 
 function readSearchParam(
@@ -156,25 +156,35 @@ export default async function WorkspaceFieldModePage({
     .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
     .slice(0, 8);
   const selectedPersonName = personNameById(persons, selectedPersonId);
+  const selectedSessionTitle = sessionTitleById(sessions, selectedSessionId);
+  const targetCount = targets.length;
+  const mustMeetCount = targets.filter((target) => target.priority === 'MUST_MEET').length;
+  const recentCount = recentActivity.length;
 
   if (persons.length === 0) {
     return (
-      <div className="grid">
-        <section className="card">
-          <h2>Field mode</h2>
-          <p className="muted">
-            Capture attendees or sessions first, then use field mode to log fast in-event updates.
-          </p>
-          <div className="button-row">
-            <a className="button-link secondary" href={workspacePath}>
-              Main workspace
-            </a>
-            <a className="button-link secondary" href="/demo/grip/attendees">
-              Capture demo attendees
-            </a>
-            <a className="button-link secondary" href="/demo/grip/sessions">
-              Capture demo sessions
-            </a>
+      <div className="field-page grid">
+        <section className="card shell-panel-card field-hero">
+          <div className="field-hero-main">
+            <div className="field-hero-copy">
+              <p className="section-eyebrow shell">Field mode</p>
+              <h2>Capture people first, then log the encounter on the move.</h2>
+              <p>
+                Field mode stays optimized for fast in-event notes, but it needs captured attendees
+                or sessions before you can save anything.
+              </p>
+            </div>
+            <div className="button-row field-hero-actions">
+              <a className="button-link shell" href={workspacePath}>
+                Main workspace
+              </a>
+              <a className="button-link shell" href="/demo/grip/attendees">
+                Capture demo attendees
+              </a>
+              <a className="button-link shell" href="/demo/grip/sessions">
+                Capture demo sessions
+              </a>
+            </div>
           </div>
         </section>
       </div>
@@ -182,27 +192,77 @@ export default async function WorkspaceFieldModePage({
   }
 
   return (
-    <div className="grid">
-      <section className="card field-hero">
-        <div>
-          <h2>{workspace.name} field mode</h2>
-          <p className="muted">
-            {event.name} · {event.city} · optimized for fast in-event capture on mobile or desktop.
-          </p>
+    <div className="field-page grid">
+      <section className="card shell-panel-card field-hero">
+        <div className="field-hero-main">
+          <div className="field-hero-copy">
+            <p className="section-eyebrow shell">Field mode</p>
+            <h2>{workspace.name} field mode</h2>
+            <p>
+              {event.name} · {event.city} · optimized for fast, one-handed in-event capture on
+              mobile or desktop.
+            </p>
+
+            <div className="pill-list field-hero-metadata">
+              <span className="badge shell">{persons.length} people</span>
+              <span className="badge shell">{targetCount} Targets</span>
+              <span className="badge shell">{mustMeetCount} must meet</span>
+            </div>
+          </div>
+
+          <div className="button-row field-hero-actions">
+            <a className="button-link shell" href={workspacePath}>
+              Main workspace
+            </a>
+          </div>
         </div>
-        <div className="button-row">
-          <a className="button-link secondary" href={workspacePath}>
-            Main workspace
-          </a>
+
+        <div className="question-strip field-summary-strip">
+          <div className="question-card shell action">
+            <p className="question-label">Who should I meet?</p>
+            <p className="question-value">
+              {selectedPersonName ? selectedPersonName : 'Tap a Target to start'}
+            </p>
+            <p className="question-detail">
+              Quick picks and match results keep the person selection step in reach.
+            </p>
+          </div>
+          <div className="question-card shell neutral">
+            <p className="question-label">What just happened?</p>
+            <p className="question-value">
+              {saved ? 'Latest encounter saved' : 'Ready to log encounter'}
+            </p>
+            <p className="question-detail">
+              {saved
+                ? `${selectedPersonName ?? 'The selected person'} was updated and stays in field mode.`
+                : 'Capture the note, outcome, tags, and optional context in one pass.'}
+            </p>
+          </div>
+          <div className="question-card shell insight">
+            <p className="question-label">Where should I be?</p>
+            <p className="question-value">
+              {selectedSessionTitle ? selectedSessionTitle : 'Optional session context'}
+            </p>
+            <p className="question-detail">
+              Aqua is reserved for session and speaker context when the encounter ties back to the floor.
+            </p>
+          </div>
         </div>
       </section>
 
       {saved ? (
         <section className="card field-feedback">
-          <strong>Saved.</strong>
-          <p className="muted">
-            {selectedPersonName ? `${selectedPersonName} was updated and the latest activity is below.` : 'The encounter was saved and you are still in field mode.'}
-          </p>
+          <div className="field-feedback-row">
+            <div>
+              <strong>Saved and still in field mode.</strong>
+              <p className="muted">
+                {selectedPersonName
+                  ? `${selectedPersonName} was updated and the latest activity is below.`
+                  : 'The encounter was saved and you are still in field mode.'}
+              </p>
+            </div>
+            <span className="badge success">Met or missed saved</span>
+          </div>
         </section>
       ) : null}
 
@@ -217,14 +277,21 @@ export default async function WorkspaceFieldModePage({
         initialSessionId={selectedSessionId}
       />
 
-      <section className="card">
-        <div className="field-panel-header">
-          <div>
+      <section className="card field-activity-panel">
+        <div className="section-header">
+          <div className="section-title-stack">
+            <p className="section-eyebrow">Recent activity confirmation</p>
             <h2>Recent activity</h2>
-            <p className="muted">Confirm the latest capture without leaving field mode.</p>
+            <p className="muted">
+              Confirm the last saved encounter without leaving field mode.
+            </p>
           </div>
+          <span className="badge neutral">
+            {recentCount} {recentCount === 1 ? 'entry' : 'entries'}
+          </span>
         </div>
-        <div className="stack">
+
+        <div className="field-activity-feed">
           {recentActivity.length === 0 ? (
             <p className="muted">No encounter activity yet.</p>
           ) : (
@@ -246,13 +313,13 @@ export default async function WorkspaceFieldModePage({
                     </div>
                     <div className="pill-list">
                       {target ? <span className="pill">{priorityLabel(target.priority)}</span> : null}
-                      {outcome ? statusBadge(outcome) : null}
+                      {outcome ? statusBadge(outcome) : <span className="badge no-action">No action</span>}
                     </div>
                   </div>
                   <p>{encounter.noteText}</p>
                   <div className="pill-list">
-                    {sessionTitle ? <span className="pill">session: {sessionTitle}</span> : null}
-                    {speakerName ? <span className="pill">speaker: {speakerName}</span> : null}
+                    {sessionTitle ? <span className="pill insight">Session: {sessionTitle}</span> : null}
+                    {speakerName ? <span className="pill insight">Speaker: {speakerName}</span> : null}
                     {encounter.tags.map((tag) => (
                       <span key={`${encounter.id}-${tag}`} className="pill">
                         {tag}

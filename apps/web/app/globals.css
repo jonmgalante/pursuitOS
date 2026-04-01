@@ -553,9 +553,42 @@
   margin-bottom: 0;
 }
 
+.field-page {
+  gap: var(--space-5);
+}
+
 .field-layout {
   display: grid;
   gap: var(--space-5);
+}
+
+.field-hero {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.field-hero-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.field-hero-copy p {
+  margin-bottom: 0;
+  color: var(--shell-text-muted);
+}
+
+.field-hero-metadata {
+  margin-top: var(--space-3);
+}
+
+.field-hero-actions {
+  justify-content: flex-end;
+}
+
+.field-summary-strip {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 }
 
 .field-panel {
@@ -564,39 +597,46 @@
 
 .field-panel-header,
 .field-activity-header,
-.field-selection,
-.field-hero {
+.field-selection {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
 }
 
-.field-hero {
-  position: relative;
-  overflow: hidden;
-}
-
-.field-hero::after {
-  content: '';
-  position: absolute;
-  inset: auto -12% -45% auto;
-  width: 14rem;
-  height: 14rem;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--raw-aqua-rgb), 0.24), transparent 68%);
-  pointer-events: none;
-}
-
 .field-section-label {
   margin: 0 0 var(--space-2);
+}
+
+.field-command-grid,
+.field-context-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field-panel-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field-command-grid + .field-panel-block,
+.field-panel-block + .field-panel-block,
+.field-context-grid + .field-context-summary {
+  margin-top: var(--space-4);
+}
+
+.field-search-input {
+  min-height: 3.35rem;
+  font-size: 1rem;
 }
 
 .field-chip-grid,
 .field-tag-grid {
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .field-chip,
@@ -604,6 +644,7 @@
 .field-segment,
 .field-result {
   width: 100%;
+  min-height: 4rem;
   padding: var(--space-4);
   border: var(--border-width) solid var(--subtle-border);
   border-radius: var(--radius-md);
@@ -614,7 +655,8 @@
 }
 
 .field-chip span,
-.field-result small {
+.field-result small,
+.field-segment span {
   display: block;
   margin-top: var(--space-1);
   color: var(--muted-text);
@@ -628,8 +670,12 @@
 }
 
 .field-segment {
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  text-align: center;
+  gap: var(--space-1);
+  min-height: 4.8rem;
+  text-align: left;
 }
 
 .field-segment.field-segment-met.active {
@@ -649,15 +695,20 @@
 
 .field-result {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+.field-result-copy {
+  display: flex;
+  flex-direction: column;
 }
 
 .field-result-meta {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: var(--space-2);
 }
 
@@ -673,10 +724,39 @@
   margin: var(--space-2) 0;
 }
 
+.field-empty-state {
+  min-height: 5.5rem;
+  display: flex;
+  align-items: center;
+}
+
 .field-segmented {
   display: grid;
   gap: var(--space-2);
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field-outcome-panel {
+  width: 100%;
+}
+
+.field-helper-text {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.field-context-summary {
+  margin-top: var(--space-3);
+}
+
+.field-activity-panel .section-header {
+  margin-bottom: var(--space-4);
+}
+
+.field-activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .field-submit-bar {
@@ -705,9 +785,26 @@
   color: var(--shell-text-muted);
 }
 
+.field-submit-copy {
+  min-width: 0;
+}
+
+.field-save-button {
+  min-width: 14rem;
+  min-height: 3.4rem;
+  font-size: 0.96rem;
+}
+
 .field-feedback {
   border-color: var(--status-success-border);
   background: var(--status-success-surface);
+}
+
+.field-feedback-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .field-feedback strong {
@@ -764,10 +861,11 @@
 @media (max-width: 960px) {
   .app-header-main,
   .workspace-hero-main,
+  .field-hero-main,
   .field-panel-header,
   .field-activity-header,
   .field-selection,
-  .field-hero,
+  .field-feedback-row,
   .field-submit-bar,
   .workspace-row {
     flex-direction: column;
@@ -786,6 +884,15 @@
   .workspace-hero-actions {
     justify-content: flex-start;
   }
+
+  .field-hero-actions {
+    justify-content: flex-start;
+  }
+
+  .field-command-grid,
+  .field-context-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 860px) {
@@ -794,8 +901,23 @@
     padding: 0 var(--space-4);
   }
 
+  .field-chip-grid,
+  .field-tag-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .field-result {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .field-submit-bar {
     bottom: var(--space-2);
     align-items: stretch;
+  }
+
+  .field-save-button {
+    width: 100%;
+    min-width: 0;
   }
 }
