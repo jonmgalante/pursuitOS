@@ -9,6 +9,7 @@ const outdir = path.join(root, 'dist');
 async function copyStaticFiles() {
   await cp(path.join(root, 'manifest.json'), path.join(outdir, 'manifest.json'));
   await cp(path.join(root, 'sidepanel.html'), path.join(outdir, 'sidepanel.html'));
+  await cp(path.join(root, '../web/app/pursuit-theme.css'), path.join(outdir, 'pursuit-theme.css'));
 }
 
 async function createBuild() {

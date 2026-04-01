@@ -228,7 +228,11 @@ export function FieldModeForm({
                   <button
                     key={value}
                     type="button"
-                    className={outcome === value ? 'field-segment active' : 'field-segment'}
+                    className={
+                      outcome === value
+                        ? `field-segment ${value === 'MET' ? 'field-segment-met' : 'field-segment-missed'} active`
+                        : `field-segment ${value === 'MET' ? 'field-segment-met' : 'field-segment-missed'}`
+                    }
                     onClick={() => setOutcome(value)}
                   >
                     {value === 'MET' ? 'Met' : 'Missed'}
