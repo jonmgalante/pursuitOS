@@ -10,8 +10,17 @@
         padding: var(--space-4);
       }
 
+      .panel-shell {
+        display: grid;
+        gap: var(--space-4);
+      }
+
       .card {
-        margin-bottom: var(--space-4);
+        margin-bottom: 0;
+      }
+
+      .panel-hero .muted {
+        color: var(--shell-text-muted);
       }
 
       h1,
@@ -19,7 +28,7 @@
         margin-top: 0;
       }
 
-      input {
+      .panel-section input {
         margin-bottom: var(--space-3);
       }
 
@@ -32,12 +41,18 @@
       }
 
       .status {
+        display: grid;
+        gap: var(--space-2);
         white-space: pre-wrap;
         margin-top: var(--space-4);
         padding: var(--space-4);
         border: var(--border-width) solid var(--subtle-border);
         border-radius: var(--radius-md);
         background: var(--raised-surface);
+      }
+
+      .status[data-state="idle"] {
+        color: var(--secondary-text);
       }
 
       .status[data-state="loading"] {
@@ -58,47 +73,108 @@
         color: var(--primary-text);
       }
 
-      .summary {
-        white-space: pre-wrap;
-        line-height: 1.5;
+      .capture-summary {
+        display: grid;
+        gap: var(--space-3);
+      }
+
+      .summary-row {
+        display: grid;
+        gap: var(--space-1);
+        padding-top: var(--space-3);
+        border-top: var(--border-width) solid var(--subtle-border);
+      }
+
+      .summary-row:first-child {
+        padding-top: 0;
+        border-top: 0;
+      }
+
+      .summary-label {
+        color: var(--muted-text);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .summary-value {
+        color: var(--primary-text);
+        line-height: 1.55;
+      }
+
+      .summary-link {
+        color: var(--secondary-text);
+        text-decoration: none;
+        overflow-wrap: anywhere;
+      }
+
+      .summary-link:hover {
+        color: var(--primary-text);
       }
     </style>
   </head>
   <body>
-    <div class="card">
-      <h1>Rep Copilot</h1>
-      <p class="muted">Capture visible Grip records from the active tab into the workspace.</p>
-    </div>
+    <div class="panel-shell">
+      <header class="card shell-panel-card panel-hero">
+        <p class="section-eyebrow shell">PursuitOS capture</p>
+        <h1>Rep Copilot</h1>
+        <p class="muted">Capture visible Grip records from the active tab into the workspace.</p>
+        <div class="pill-list">
+          <span class="badge shell">Visible records only</span>
+          <span class="badge shell">DOM-first capture</span>
+        </div>
+      </header>
 
-    <div class="card">
-      <h2>Workspace settings</h2>
-      <label for="webAppUrl">Web app URL</label>
-      <input id="webAppUrl" type="text" value="http://localhost:3000" />
+      <section class="card panel-section">
+        <div class="section-header compact">
+          <div class="section-title-stack">
+            <p class="section-eyebrow">Workspace link</p>
+            <h2>Workspace settings</h2>
+          </div>
+        </div>
 
-      <label for="workspaceId">Workspace ID</label>
-      <input id="workspaceId" type="text" value="ws_demo_summit_2026" />
+        <label for="webAppUrl">Web app URL</label>
+        <input id="webAppUrl" type="text" value="http://localhost:3000" />
 
-      <div class="button-row">
-        <button id="saveSettings" class="secondary">Save settings</button>
-        <button id="openWorkspace" class="secondary">Open workspace</button>
-      </div>
-    </div>
+        <label for="workspaceId">Workspace ID</label>
+        <input id="workspaceId" type="text" value="ws_demo_summit_2026" />
 
-    <div class="card">
-      <h2>Capture</h2>
-      <p class="muted">
-        Open a visible attendee or session page and press capture. The extension injects the
-        content script only into the active tab.
-      </p>
-      <div class="button-row">
-        <button id="capture">Capture current page</button>
-      </div>
-      <div id="status" class="status" data-state="idle">Ready.</div>
-    </div>
+        <div class="button-row">
+          <button id="saveSettings" class="secondary">Save settings</button>
+          <button id="openWorkspace" class="shell">Open workspace</button>
+        </div>
+      </section>
 
-    <div id="lastCaptureCard" class="card" hidden>
-      <h2>Last Capture</h2>
-      <div id="lastCaptureSummary" class="summary muted"></div>
+      <section class="card panel-section">
+        <div class="section-header compact">
+          <div class="section-title-stack">
+            <p class="section-eyebrow">Active tab capture</p>
+            <h2>Capture</h2>
+          </div>
+          <span class="badge insight">Active tab only</span>
+        </div>
+
+        <p class="muted">
+          Open a visible attendee or session page and press capture. The extension injects the
+          content script only into the active tab.
+        </p>
+        <div class="button-row">
+          <button id="capture">Capture current page</button>
+        </div>
+        <div id="status" class="status" data-state="idle" role="status" aria-live="polite">Ready.</div>
+      </section>
+
+      <section id="lastCaptureCard" class="card panel-section" hidden>
+        <div class="section-header compact">
+          <div class="section-title-stack">
+            <p class="section-eyebrow">Latest result</p>
+            <h2>Last capture</h2>
+          </div>
+          <span class="badge neutral">Summary</span>
+        </div>
+        <div id="lastCaptureSummary" class="capture-summary"></div>
+      </section>
     </div>
 
     <script type="module" src="./sidepanel.js"></script>

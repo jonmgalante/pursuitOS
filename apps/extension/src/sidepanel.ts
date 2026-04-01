@@ -17,10 +17,43 @@ const saveButton = document.querySelector<HTMLButtonElement>('#saveSettings');
 const openWorkspaceButton = document.querySelector<HTMLButtonElement>('#openWorkspace');
 const captureButton = document.querySelector<HTMLButtonElement>('#capture');
 
+function createSummaryRow(
+  label: string,
+  value: string,
+  options?: { href?: string }
+) {
+  const row = document.createElement('div');
+  row.className = 'summary-row';
+
+  const labelEl = document.createElement('div');
+  labelEl.className = 'summary-label';
+  labelEl.textContent = label;
+
+  let valueEl: HTMLElement;
+  if (options?.href) {
+    const link = document.createElement('a');
+    link.className = 'summary-value summary-link';
+    link.href = options.href;
+    link.target = '_blank';
+    link.rel = 'noreferrer';
+    link.textContent = value;
+    valueEl = link;
+  } else {
+    const text = document.createElement('div');
+    text.className = 'summary-value';
+    text.textContent = value;
+    valueEl = text;
+  }
+
+  row.append(labelEl, valueEl);
+  return row;
+}
+
 function setStatus(kind: 'idle' | 'loading' | 'success' | 'error', text: string) {
   if (statusEl) {
     statusEl.textContent = text;
     statusEl.dataset.state = kind;
+    statusEl.setAttribute('aria-label', text.replaceAll('\n', ' '));
   }
 }
 
@@ -38,19 +71,22 @@ function renderLastCaptureSummary(summary?: ExtensionCaptureSummary) {
 
   if (!summary) {
     lastCaptureCardEl.hidden = true;
-    lastCaptureSummaryEl.textContent = '';
+    lastCaptureSummaryEl.replaceChildren();
     return;
   }
 
   lastCaptureCardEl.hidden = false;
-  lastCaptureSummaryEl.textContent = [
-    `${summary.pageTitle || summary.pageType}`,
-    `${summary.pageType} · ${summary.totalRecords} records`,
-    `Added people: ${summary.addedPeople} · Added sessions: ${summary.addedSessions}`,
-    new Date(summary.capturedAt).toLocaleString(),
-    summary.pageUrl,
-    summary.pageTextSummary
-  ].join('\n');
+  lastCaptureSummaryEl.replaceChildren(
+    createSummaryRow('Page', summary.pageTitle || summary.pageType),
+    createSummaryRow('Records', `${summary.pageType} · ${summary.totalRecords} records`),
+    createSummaryRow(
+      'Added',
+      `People ${summary.addedPeople} · Sessions ${summary.addedSessions}`
+    ),
+    createSummaryRow('Captured', new Date(summary.capturedAt).toLocaleString()),
+    createSummaryRow('URL', summary.pageUrl, { href: summary.pageUrl }),
+    createSummaryRow('Visible summary', summary.pageTextSummary)
+  );
 }
 
 async function loadSettings() {

@@ -139,6 +139,10 @@ a {
   color: inherit;
 }
 
+a:hover {
+  text-decoration: none;
+}
+
 h1,
 h2,
 h3 {
@@ -171,6 +175,12 @@ small,
   font-size: 0.8125rem;
 }
 
+.lead {
+  color: var(--secondary-text);
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+
 code,
 pre {
   font-family: var(--font-mono);
@@ -197,6 +207,72 @@ pre {
 
 .muted {
   color: var(--muted-text);
+}
+
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  color: var(--status-follow-up);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.section-eyebrow::before {
+  content: '';
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+
+.section-eyebrow.shell {
+  color: var(--shell-text-muted);
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.section-header.compact {
+  margin-bottom: var(--space-3);
+}
+
+.section-header-shell h2,
+.section-header-shell p {
+  color: var(--shell-text);
+}
+
+.section-title-stack > :last-child {
+  margin-bottom: 0;
+}
+
+.inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--secondary-text);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+}
+
+.inline-link::after {
+  content: '→';
+  color: var(--status-follow-up);
+}
+
+.inline-link:hover {
+  color: var(--primary-text);
 }
 
 .grid {
@@ -228,7 +304,9 @@ pre {
 }
 
 .card {
-  background: var(--main-surface);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(var(--raw-sand-raised-rgb), 0.82), var(--main-surface));
   border: var(--border-width) solid var(--subtle-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -238,6 +316,23 @@ pre {
 .card .card {
   background: var(--raised-surface);
   box-shadow: none;
+}
+
+.shell-panel-card {
+  background: linear-gradient(180deg, rgba(var(--raw-steel-rgb), 0.96), rgba(var(--raw-midnight-rgb), 0.98));
+  border-color: rgba(var(--raw-sand-rgb), 0.12);
+  color: var(--shell-text);
+  box-shadow: var(--shadow-floating);
+}
+
+.shell-panel-card h1,
+.shell-panel-card h2,
+.shell-panel-card h3,
+.shell-panel-card p,
+.shell-panel-card strong,
+.shell-panel-card small,
+.shell-panel-card .muted {
+  color: inherit;
 }
 
 :where(button, .button-link) {
@@ -289,10 +384,26 @@ pre {
 }
 
 :where(button, .button-link).secondary {
-  border-color: var(--strong-border);
-  background: var(--raised-surface);
+  border-color: rgba(var(--raw-steel-rgb), 0.3);
+  background: rgba(var(--raw-sand-raised-rgb), 0.92);
   box-shadow: none;
   color: var(--primary-text);
+}
+
+:where(button, .button-link).secondary:hover:not(:disabled) {
+  border-color: rgba(var(--raw-steel-rgb), 0.45);
+  background: var(--raised-surface);
+}
+
+:where(button, .button-link).shell {
+  border-color: rgba(var(--raw-sand-rgb), 0.14);
+  background: rgba(var(--raw-sand-rgb), 0.08);
+  box-shadow: none;
+  color: var(--shell-text);
+}
+
+:where(button, .button-link).shell:hover:not(:disabled) {
+  background: rgba(var(--raw-sand-rgb), 0.14);
 }
 
 :where(button, .button-link).success {
@@ -350,6 +461,10 @@ textarea {
   padding: 0.8rem 0.9rem;
   font: inherit;
   box-shadow: inset 0 1px 0 rgba(var(--raw-sand-rgb), 0.7);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 input::placeholder,
@@ -419,6 +534,12 @@ tbody tr:hover {
   letter-spacing: 0.02em;
 }
 
+.badge.shell {
+  border-color: rgba(var(--raw-sand-rgb), 0.12);
+  background: rgba(var(--raw-sand-rgb), 0.08);
+  color: var(--shell-text);
+}
+
 .badge::before {
   content: '';
   width: 0.5rem;
@@ -485,6 +606,7 @@ label.pill input {
   border: var(--border-width) solid var(--subtle-border);
   border-radius: var(--radius-md);
   background: var(--raised-surface);
+  box-shadow: var(--shadow-raised);
 }
 
 hr.soft {
