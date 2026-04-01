@@ -421,7 +421,8 @@ class FileFirstSliceRepository implements FirstSliceRepository {
       metadata: {
         personId: input.personId,
         mode: input.syncResult.mode,
-        externalId: input.syncResult.externalId
+        externalId: input.syncResult.externalId,
+        ...(input.auditMetadata ?? {})
       }
     });
 
@@ -452,7 +453,8 @@ class FileFirstSliceRepository implements FirstSliceRepository {
       metadata: {
         personId,
         mode: input.syncResult.mode,
-        externalId: input.syncResult.externalId
+        externalId: input.syncResult.externalId,
+        ...(input.auditMetadata ?? {})
       }
     });
 

@@ -13,10 +13,12 @@
 ## Expected Environment Variables
 
 - None are required for the default demo-first file-backed flow.
-- `HUBSPOT_ACCESS_TOKEN` enables live HubSpot task creation instead of mock mode.
-- `GMAIL_ACCESS_TOKEN` enables live Gmail draft creation instead of mock mode.
+- `HUBSPOT_SYNC_MODE=live` plus `HUBSPOT_ACCESS_TOKEN` enables live HubSpot task creation. Leave `HUBSPOT_SYNC_MODE` unset or set it to `mock` for the default deterministic mock path.
+- `GMAIL_SYNC_MODE=live` plus `GMAIL_ACCESS_TOKEN` enables live Gmail draft creation. Leave `GMAIL_SYNC_MODE` unset or set it to `mock` for the default deterministic mock path.
 - `COPILOT_FIRST_SLICE_BACKEND=prisma` opts the web app into the Prisma-backed first-slice repository. Leave it unset for the default file-backed flow.
 - `DATABASE_URL` is optional if you use the bundled `docker-compose.yml` Postgres defaults. It is required only when your local Postgres URL differs from `postgresql://copilot:copilot@localhost:5432/conference_copilot`.
+
+No OAuth UI is implemented in this slice. Live sync tokens must come from env today or a future stub token provider.
 
 ## Optional Local Postgres For Prisma Mode
 
@@ -53,6 +55,26 @@ In Prisma mode, page HTML artifacts still stay on local disk in `apps/web/.artif
 5. Return to `/workspaces/ws_demo_summit_2026`.
 6. Mark targets, log an encounter, generate a follow-up draft, create a HubSpot task, and create a Gmail draft.
 
+## Manual Live Sync Verification
+
+Do not use live credentials for the required milestone validations. Keep `pnpm check` and `pnpm smoke:first-slice` in mock mode.
+
+When you intentionally verify live sync later:
+
+1. Set `HUBSPOT_SYNC_MODE=live` and `HUBSPOT_ACCESS_TOKEN=<token>` in `.env`.
+2. Set `GMAIL_SYNC_MODE=live` and `GMAIL_ACCESS_TOKEN=<token>` in `.env`.
+3. Restart `pnpm dev:web`.
+4. Run the browser demo flow through draft generation.
+5. Use Avery Chen or Jordan Kim so the HubSpot sync path has deterministic matched-contact metadata available.
+6. Sync the HubSpot task and confirm the task exists in HubSpot and is associated to the matched contact when that contact id exists locally.
+7. Sync the Gmail draft and confirm a draft appears in the connected Gmail mailbox.
+
+Credential notes:
+
+- The HubSpot token must be able to create CRM tasks.
+- The Gmail token must permit draft creation. Gmail `users.drafts.create` accepts `https://www.googleapis.com/auth/gmail.compose`, `https://www.googleapis.com/auth/gmail.modify`, or `https://mail.google.com/`.
+- Gmail remains draft-only in this code path. There is no send call and no OAuth UI in this slice.
+
 ## Automated Smoke Harness
 
 Run `pnpm smoke:first-slice` from the repo root for the repeatable first-slice regression check.
@@ -60,7 +82,7 @@ Run `pnpm smoke:first-slice` from the repo root for the repeatable first-slice r
 The harness:
 
 - runs in isolated file mode by default
-- forces mock HubSpot and Gmail sync even if live tokens are present
+- forces mock HubSpot and Gmail sync even if live sync mode env vars or access tokens are present
 - captures the demo attendee and session pages with the current Grip extractor
 - drives the current target, encounter, draft, and sync routes without manual browser clicking
 - verifies the 25-record capture floor, met vs missed separation, and audit log coverage for capture and sync
@@ -74,6 +96,7 @@ If the smoke command fails, treat it as a broken first-slice path. The output te
 - If the web app shows an empty workspace, seed the demo workspace again from the home page or `POST /api/demo/seed`.
 - If extension code changes do not appear in Chrome, wait for the watch rebuild to finish and then reload the extension in `chrome://extensions`.
 - If HubSpot or Gmail calls fail in live mode, remove the access token to fall back to deterministic mock behavior while debugging.
+- If HubSpot or Gmail do not switch to live mode when you expect them to, confirm both the sync mode env var and the access token are set before restarting the web app.
 - If Prisma mode fails to boot, confirm Postgres is running, `pnpm db:generate` has completed, and `pnpm --filter @copilot/db prisma db push` has been applied to the target database.
 
 ## Do Not Commit Generated Artifacts

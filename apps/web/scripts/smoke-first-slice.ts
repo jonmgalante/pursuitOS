@@ -42,6 +42,15 @@ async function resetDir(dirPath: string): Promise<void> {
   await fs.mkdir(dirPath, { recursive: true });
 }
 
+function restoreEnvVar(name: string, value: string | undefined): void {
+  if (value === undefined) {
+    delete process.env[name];
+    return;
+  }
+
+  process.env[name] = value;
+}
+
 function createFormRequest(
   url: string,
   fields: Record<string, string | string[]>
@@ -97,14 +106,18 @@ async function main(): Promise<void> {
   const artifactsDir = path.join(smokeRoot, 'artifacts');
   const workspaceId = DEMO_WORKSPACE.id;
   const originalOpenAIApiKey = process.env.OPENAI_API_KEY;
+  const originalHubSpotSyncMode = process.env.HUBSPOT_SYNC_MODE;
   const originalHubSpotAccessToken = process.env.HUBSPOT_ACCESS_TOKEN;
+  const originalGmailSyncMode = process.env.GMAIL_SYNC_MODE;
   const originalGmailAccessToken = process.env.GMAIL_ACCESS_TOKEN;
 
   await resetDir(smokeRoot);
   process.env.COPILOT_FILE_STORE_DIR = fileStoreDir;
   process.env.COPILOT_ARTIFACTS_DIR = artifactsDir;
   delete process.env.OPENAI_API_KEY;
+  delete process.env.HUBSPOT_SYNC_MODE;
   delete process.env.HUBSPOT_ACCESS_TOKEN;
+  delete process.env.GMAIL_SYNC_MODE;
   delete process.env.GMAIL_ACCESS_TOKEN;
 
   const restoreComputedStyle = installComputedStyleMock();
@@ -483,7 +496,13 @@ async function main(): Promise<void> {
       const captureAuditLogs = workspace.auditLogs.filter((entry) => entry.action === 'capture.ingested');
       const encounterAuditLogs = workspace.auditLogs.filter((entry) => entry.action === 'encounter.logged');
       const draftAuditLogs = workspace.auditLogs.filter((entry) => entry.action === 'draft.generated');
+      const hubspotAttemptAuditLogs = workspace.auditLogs.filter(
+        (entry) => entry.action === 'hubspot.task_sync_attempted'
+      );
       const hubspotAuditLogs = workspace.auditLogs.filter((entry) => entry.action === 'hubspot.task_synced');
+      const gmailAttemptAuditLogs = workspace.auditLogs.filter(
+        (entry) => entry.action === 'gmail.draft_sync_attempted'
+      );
       const gmailAuditLogs = workspace.auditLogs.filter((entry) => entry.action === 'gmail.draft_synced');
 
       expect(
@@ -519,9 +538,19 @@ async function main(): Promise<void> {
         'Check follow-up draft fallback metadata when OPENAI_API_KEY is missing.'
       );
       expect(
+        hubspotAttemptAuditLogs.some((entry) => entry.metadata.mode === 'mock'),
+        'Expected a mock HubSpot sync attempt audit log entry.',
+        'Check HubSpot sync attempt audit logging before provider execution.'
+      );
+      expect(
         hubspotAuditLogs.some((entry) => entry.metadata.mode === 'mock'),
         'Expected a mock HubSpot sync audit log entry.',
         'Check HubSpot sync audit logging and mock/live mode handling.'
+      );
+      expect(
+        gmailAttemptAuditLogs.some((entry) => entry.metadata.mode === 'mock'),
+        'Expected a mock Gmail sync attempt audit log entry.',
+        'Check Gmail sync attempt audit logging before provider execution.'
       );
       expect(
         gmailAuditLogs.some((entry) => entry.metadata.mode === 'mock'),
@@ -536,9 +565,11 @@ async function main(): Promise<void> {
     console.log('Smoke harness passed.');
   } finally {
     restoreComputedStyle();
-    process.env.OPENAI_API_KEY = originalOpenAIApiKey;
-    process.env.HUBSPOT_ACCESS_TOKEN = originalHubSpotAccessToken;
-    process.env.GMAIL_ACCESS_TOKEN = originalGmailAccessToken;
+    restoreEnvVar('OPENAI_API_KEY', originalOpenAIApiKey);
+    restoreEnvVar('HUBSPOT_SYNC_MODE', originalHubSpotSyncMode);
+    restoreEnvVar('HUBSPOT_ACCESS_TOKEN', originalHubSpotAccessToken);
+    restoreEnvVar('GMAIL_SYNC_MODE', originalGmailSyncMode);
+    restoreEnvVar('GMAIL_ACCESS_TOKEN', originalGmailAccessToken);
   }
 }
 

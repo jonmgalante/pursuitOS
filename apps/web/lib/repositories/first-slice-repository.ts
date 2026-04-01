@@ -94,12 +94,14 @@ export interface SaveSyncTaskResultInput {
   body: string;
   dueAt: string;
   syncResult: ConnectorSyncResult;
+  auditMetadata?: Record<string, unknown>;
 }
 
 export interface SaveSyncDraftResultInput {
   workspaceId: string;
   draftId: string;
   syncResult: ConnectorSyncResult;
+  auditMetadata?: Record<string, unknown>;
 }
 
 export interface AuditLogWriteInput {

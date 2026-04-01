@@ -30,7 +30,7 @@ This repository is the locked MVP scaffold for a conference rep copilot:
 
 - The first slice is demoable now through a file-backed store in `apps/web/lib/store.ts`.
 - The extension captures visible Grip demo pages from the active tab into the web workspace.
-- HubSpot task creation and Gmail draft creation run in mock mode unless you set access tokens in `.env`.
+- HubSpot task creation and Gmail draft creation stay in mock mode by default and only go live when you explicitly set sync mode plus an access token in `.env`.
 - Encounter note structuring and follow-up draft generation use deterministic fallback unless you set `OPENAI_API_KEY`.
 - The worker path is still scaffold-only.
 - The Prisma/Postgres path is now available as an opt-in first-slice backend; file mode remains the default.
@@ -44,7 +44,14 @@ pnpm db:generate
 pnpm check
 ```
 
-`.env` can stay empty for the default demo-first flow. Add `OPENAI_API_KEY` only if you want live OpenAI note structuring and follow-up draft generation instead of deterministic fallback behavior. Add `HUBSPOT_ACCESS_TOKEN` or `GMAIL_ACCESS_TOKEN` only if you want live sync instead of deterministic mock behavior.
+`.env` can stay empty for the default demo-first flow. Add `OPENAI_API_KEY` only if you want live OpenAI note structuring and follow-up draft generation instead of deterministic fallback behavior.
+
+Live sync now requires explicit mode selection as well as a token:
+
+- `HUBSPOT_SYNC_MODE=live` plus `HUBSPOT_ACCESS_TOKEN` enables live HubSpot task creation.
+- `GMAIL_SYNC_MODE=live` plus `GMAIL_ACCESS_TOKEN` enables live Gmail draft creation.
+
+If the mode variables are unset, the app stays in deterministic mock mode even when tokens are present. No OAuth UI is implemented in this slice; tokens must come from env or a future stub token provider.
 
 Set `COPILOT_FIRST_SLICE_BACKEND=prisma` only if you want the optional Postgres-backed repository. `DATABASE_URL` is optional when you use the bundled `docker-compose.yml` defaults and only needs to be set when your local Postgres URL differs.
 
@@ -87,6 +94,27 @@ If you are running `pnpm dev:extension`, Chrome will still need an extension rel
 
 The default sync mode is mock. Gmail remains draft-only even when a live token is present.
 
+## Manual live sync verification
+
+The required milestone validations stay credential-free: `pnpm check` and `pnpm smoke:first-slice`.
+
+If you want to verify live provider behavior later, do it manually:
+
+1. Set `HUBSPOT_SYNC_MODE=live` and `HUBSPOT_ACCESS_TOKEN=<token>` in `.env`.
+2. Set `GMAIL_SYNC_MODE=live` and `GMAIL_ACCESS_TOKEN=<token>` in `.env`.
+3. Restart `pnpm dev:web` so the server picks up the new sync configuration.
+4. Run the normal demo flow in the browser up to draft generation.
+5. Use a matched person such as Avery Chen or Jordan Kim, click **sync HubSpot task**, and confirm a task is created in HubSpot and associated to the matched contact when a deterministic HubSpot match exists.
+6. Click **sync Gmail draft** and confirm a draft appears in the connected Gmail mailbox.
+
+Notes:
+
+- The smoke harness always forces mock sync and does not exercise live providers.
+- The HubSpot token must be able to create CRM tasks.
+- The Gmail token must permit draft creation. Gmail `users.drafts.create` accepts `https://www.googleapis.com/auth/gmail.compose`, `https://www.googleapis.com/auth/gmail.modify`, or `https://mail.google.com/`.
+- Gmail live verification still creates a draft only. The code calls Gmail `users.me.drafts.create`, not the send endpoint.
+- HubSpot task association uses the matched contact id when one already exists on the person record.
+
 ## Field mode manual smoke
 
 Use field mode to confirm the new in-event encounter flow quickly:
@@ -128,7 +156,7 @@ Run the first-slice smoke harness with:
 pnpm smoke:first-slice
 ```
 
-The smoke harness runs entirely in isolated file mode with mock HubSpot and Gmail sync. It does not require manual browser clicking, Chrome, real OAuth, or external network access.
+The smoke harness runs entirely in isolated file mode with mock HubSpot and Gmail sync. It does not require manual browser clicking, Chrome, real OAuth, or external network access, and it ignores live sync env vars if they are set in your shell.
 
 It covers the current first slice end to end:
 
@@ -143,7 +171,7 @@ It covers the current first slice end to end:
 - create 1 mock HubSpot task
 - create 1 mock Gmail draft
 - verify met vs missed separation
-- verify audit log coverage for capture and sync
+- verify audit log coverage for capture and sync, including sync-attempt entries
 
 A smoke failure means the existing first-slice regression path is broken somewhere in capture, target workflow, encounter logging, draft generation, sync, provenance, or audit logging. The command prints the failing step and a targeted hint for where to look first.
 

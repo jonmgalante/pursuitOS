@@ -1372,7 +1372,8 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
         metadata: {
           personId: input.personId,
           mode: input.syncResult.mode,
-          externalId: input.syncResult.externalId
+          externalId: input.syncResult.externalId,
+          ...(input.auditMetadata ?? {})
         }
       });
     });
@@ -1428,7 +1429,8 @@ export class PrismaFirstSliceRepository implements FirstSliceRepository {
         metadata: {
           personId: existing.personId,
           mode: input.syncResult.mode,
-          externalId: input.syncResult.externalId
+          externalId: input.syncResult.externalId,
+          ...(input.auditMetadata ?? {})
         }
       });
     });

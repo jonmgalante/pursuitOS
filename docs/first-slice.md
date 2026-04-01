@@ -108,4 +108,4 @@ This scaffold is designed to map directly to the acceptance tests:
   Target status controls support targeted / met / missed.
 
 - **create a HubSpot task and Gmail draft**  
-  Mock by default; live if access tokens are present.
+  Mock by default; live only when explicit sync mode is set to `live` and provider access tokens are present.

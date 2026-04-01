@@ -1,4 +1,3 @@
-import { createGmailDraft, createHubSpotTask } from '@copilot/connectors';
 import {
   rankSessions,
   type Company,
@@ -19,6 +18,7 @@ import {
 import { createFileFirstSliceRepository } from '../repositories/file-first-slice-repository';
 import { createPrismaFirstSliceRepository } from '../repositories/prisma-first-slice-repository';
 import { createGenerationService, type GenerationService } from './generation-service';
+import { createSyncService, type SyncService } from './sync-service';
 
 export interface WorkspaceView {
   workspace: WorkspaceSummary;
@@ -54,7 +54,8 @@ function companyNameForPerson(companies: Company[], companyId?: string): string 
 class RepositoryBackedFirstSliceService implements FirstSliceService {
   constructor(
     private readonly repository: FirstSliceRepository,
-    private readonly generationService: GenerationService
+    private readonly generationService: GenerationService,
+    private readonly syncService: SyncService
   ) {}
 
   async ensureDemoWorkspace(): Promise<string> {
@@ -224,29 +225,13 @@ class RepositoryBackedFirstSliceService implements FirstSliceService {
 
     const target = workspace.targets.find((item) => item.personId === personId);
     const encounter = workspace.encounters.find((item) => item.personId === personId);
-    const title = `Follow up with ${person.fullName}`;
-    const body = encounter
-      ? `Conference follow-up after ${workspace.event.name}: ${encounter.structuredSummary}`
-      : `Conference follow-up after ${workspace.event.name}.`;
-    const dueAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString();
-
-    const result = await createHubSpotTask({
-      subject: title,
-      body,
-      dueAt
-    });
-
-    return this.repository.saveSyncTaskResult({
+    return this.syncService.syncHubSpotTask({
       workspaceId,
-      personId,
-      targetId: target?.id,
-      title,
-      body,
-      dueAt,
-      syncResult: {
-        mode: result.mode,
-        externalId: result.externalId
-      }
+      eventName: workspace.event.name,
+      person,
+      target,
+      encounter,
+      companyName: companyNameForPerson(workspace.companies, person.companyId)
     });
   }
 
@@ -263,19 +248,10 @@ class RepositoryBackedFirstSliceService implements FirstSliceService {
       throw new Error('The selected person needs an email before creating a Gmail draft.');
     }
 
-    const result = await createGmailDraft({
-      to: person.primaryEmail,
-      subject: draft.subject,
-      body: draft.body
-    });
-
-    return this.repository.saveSyncDraftResult({
+    return this.syncService.syncGmailDraft({
       workspaceId,
-      draftId,
-      syncResult: {
-        mode: result.mode,
-        externalId: result.externalId
-      }
+      person,
+      draft
     });
   }
 }
@@ -304,9 +280,10 @@ function createConfiguredFirstSliceRepository(): FirstSliceRepository {
 
 export function createFirstSliceService(
   repository: FirstSliceRepository = createFileFirstSliceRepository(),
-  generationService: GenerationService = createGenerationService()
+  generationService: GenerationService = createGenerationService(),
+  syncService: SyncService = createSyncService(repository)
 ): FirstSliceService {
-  return new RepositoryBackedFirstSliceService(repository, generationService);
+  return new RepositoryBackedFirstSliceService(repository, generationService, syncService);
 }
 
 let defaultFirstSliceService: FirstSliceService | undefined;
